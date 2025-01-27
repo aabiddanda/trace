@@ -14,7 +14,7 @@ from scipy.stats import binom
 from scipy.stats import gamma as gamma_sp
 from tqdm import tqdm
 
-from .ghosthmm_utils import (
+from ghosthmm_utils import (
     backward_algo_product,
     ecm_full_update,
     emission_product_z1,

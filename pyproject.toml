@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools>=61",
+    "setuptools>=70",
     "wheel",
     "cython",
     "scipy",
@@ -9,18 +9,22 @@ requires = [
     "cyvcf2",
     "tqdm",
     "Click",
+    "tskit",
+    "joblib",
+    "pomegranate",
+    "KDEpy"
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "ghosthmm"
-description = "XXX."
+description = "HMM-based method to infer latent admixture ."
 keywords = [""]
 classifiers = ["Development Status :: 3 - Alpha", "Intended Audience :: Science/Research", "Programming Language :: Python :: 3"]
 requires-python = ">= 3.11"
 dependencies = ["numpy", "scipy", "pandas", "Cython", "Click", "cyvcf2"]
 dynamic = ["version"]
-authors = [{name = "Arjun Biddanda", email = "abiddan1@jhu.edu"}, {name="Yulin Zhang", email=""}]
+authors = [{name = "Arjun Biddanda", email = "abiddan1@jhu.edu"}, {name="Yulin Zhang", email="zhangyulin9806@berkeley.edu"}]
 
 [project.urls]
 Homepage = "https://github.com/aabiddanda/ghosthmm"
