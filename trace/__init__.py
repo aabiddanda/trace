@@ -3,5 +3,5 @@
 __version__ = "0.0.1a"
 
 
-from .ghosthmm import GhostProductHMM
+from .trace import GhostProductHMM
 from .utils import ARGUtils, OutputUtils, PerformanceUtils
