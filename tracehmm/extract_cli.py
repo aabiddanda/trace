@@ -1,11 +1,15 @@
 """CLI for trace-extract."""
 import logging
 import sys
-from tracehmm import TRACE
 
 import click
 import numpy as np
 import pandas as pd
+import pybedtools
+import tskit
+import tszip
+
+from tracehmm import TRACE, OutputUtils
 
 # Setup the logging configuration for the CLI
 logging.basicConfig(
@@ -13,6 +17,56 @@ logging.basicConfig(
     level=logging.INFO,
     datefmt="%Y-%m-%d %H:%M:%S",
 )
+
+
+def write_mutation_ages(ts, chrom=None, include_regions=None, outfix="trace"):
+    """Write out the mutational ages."""
+    out = ""
+    for tree in tqdm(ts.trees()):
+        for mut in tree.mutations():
+            if tree.parent(mut.node) != tskit.NULL:
+                out += f"{chrom}\t{int(ts.site(mut.site).position) - 1}\t{int(ts.site(mut.site).position)}\t{tree.time(mut.node)}_{tree.time(tree.parent(mut.node))}\n"
+            else:
+                out += f"{chrom}\t{int(ts.site(mut.site).position) - 1}\t{int(ts.site(mut.site).position)}\t{tree.time(mut.node)}_{tree.time(mut.node)}\n"
+    a = pybedtools.BedTool(out, from_string=True)
+    if include_regions is not None:
+        logging.info(f"Loading {include_regions} to subset mutations considered ...")
+        include_regions = pybedtools.BedTool(include_regions)
+        a = a.intersect(include_regions, u=True)
+    out = "chromosome\tposition\tmutation_age\n"
+    for x in a:
+        out += f"{x.chrom}\t{x.end}\t{x[3]}\n"
+    with open(f"{outfix}.mutation_ages.txt", "w") as out_fp:
+        out_fp.write(out)
+    logging.info(f"mutation ages saved to {outfix}.mutation_ages.txt")
+
+
+def verify_indivs(indiv=None, sample_names=None):
+    """Verify the structure of the individuals provided for extraction."""
+    if samples is not None:
+        indiv = samples.strip("\"'").strip(",").split(",")
+    else:
+        try:
+            with open(sample_names, "r") as f:
+                indiv = f.readlines()
+            indiv = [x.strip() for x in indiv]
+        except FileNotFoundError:
+            logging.info(f"{sample_names} is not a valid filepath...")
+            sys.exit(1)
+    try:
+        indiv = [int(x) for x in indiv if len(x) > 0]
+    except:
+        indiv = [str(x) for x in indiv if len(x) > 0]
+    output_utils = Output_utils(samplefile=sample_names, samplename=indiv)
+    if sample_names is not None:
+        samplename_to_tsid, tsid_to_samplename = output_utils.read_samplename()
+        if isinstance(indiv[0], str):
+            indiv = np.array([samplename_to_tsid[x] for x in indiv])
+
+    # makesure indiv is tree node ID
+    assert isinstance(indiv[0], int)
+
+    return indiv
 
 
 def get_data(ts, ind, t_archaic, windowsize, func, mask=None, chrom=None):
@@ -125,7 +179,7 @@ def get_data(ts, ind, t_archaic, windowsize, func, mask=None, chrom=None):
     "--samples",
     "-s",
     required=False,
-    type=click.Path(exists=True),
+    type=str,
     help="List of sampled individuals to run analysis for.",
 )
 @click.option(
@@ -145,25 +199,106 @@ def get_data(ts, ind, t_archaic, windowsize, func, mask=None, chrom=None):
     help="Summarize function for windows.",
 )
 @click.option(
+    "--sample-names",
+    help="a file containing sample names for all individuals in the tree sequence, "
+    + "tab separated, two columns, first column contains tree node id (int), "
+    + "second column contains sample names (str)",
+    type=click.Path(exists=True),
+    default=None,
+)
+@click.option(
+    "--chrom",
+    help="chromosome ID for the tree sequence, must match the chromosome ID in the include regions file",
+    type=str,
+    default=None,
+)
+@click.option(
+    "--include-regions",
+    help="a BED file containing the INCLUDE regions for the tree sequence",
+    type=click.Path(exists=True),
+    default=None,
+)
+@click.option(
+    "--mutation-age",
+    help="only extract mutation ages in the tree sequence, limited by include regions if specified",
+    is_flag=True,
+    default=False,
+)
+@click.option(
     "--out",
     "-o",
     required=True,
     type=str,
     default="trace",
-    help="Output file prefix.",
+    help="Output file prefixes.",
 )
 def main(
-    input=None,
-    time=15e3,
+    tree_file=None,
+    t_archaic=15e3,
+    samples=None,
+    window_size=None,
+    func="mean",
+    sample_names=None,
+    chrom=None,
+    include_regions=None,
+    mutation_age=None,
     out="trace",
 ):
     """TRACE-Extract CLI."""
     logging.info(f"Starting trace-extract ...")
-    print(f"loading {input}")
+    logging.info(f"Loading {tree_file} ... ")
     if tree_file.endswith(".trees"):
         ts = tskit.load(tree_file)
     elif tree_file.endswith(".tsz"):
         ts = tszip.decompress(tree_file)
     else:
-        print(f"Unrecognized file extension: {tree_file}")
+        logging.info(f"Unrecognized file extension: {tree_file}")
         sys.exit(1)
+
+    if mutation_age:
+        logging.info(f"Extracting mutations to write from {tree_file} ...")
+        write_mutation_ages(
+            ts, chrom=chrom, include_regions=include_regions, outfix=out
+        )
+    else:
+        # NOTE: you probably have to error out to make sure both are not None...
+        logging.info(f"Verifying individual labels ...")
+        logging.info(f"Comparing {samples} and {sample_names} ...")
+        indiv = verify_indivs(samples, sample_names)
+        if include_regions is not None:
+            if chrom is None:
+                logging.info(
+                    f"chromosome identifier is not specified (required when using --include-regions) ... exiting."
+                )
+                sys.exit(1)
+        # This is the actual look to run ...
+        logging.info(
+            f"Extracting TRACE-information from {tree_file} across {len(indiv)} individuals ..."
+        )
+        m = int(ts.sequence_length / window_size) + int(
+            ts.sequence_length % window_size > 0
+        )
+        ncoal = np.zeros((len(indiv), m))
+        t1s = np.zeros((len(indiv), m))
+        t2s = np.zeros((len(indiv), m))
+        ncoal, t1s, t2s, nleaves, treespan, accessible_windows, mask = get_data(
+            ts, indiv, t_archaic, window_size, func, include_regions, chrom
+        )
+        atreespan = np.array([[t * s, (t + 1) * s] for t in range(m)])
+        logging.info(
+            f"Extracting TRACE-information from {tree_file} across {len(indiv)} individuals ..."
+        )
+
+        # save as npz file
+        np.savez_compressed(
+            f"{out}.npz",
+            ncoal=ncoal,
+            t1s=t1s,
+            t2s=t2s,
+            nleaves=nleaves,
+            marginal_treespan=treespan,
+            treespan=atreespan,
+            marginal_mask=mask,
+            accessible_windows=accessible_windows,
+            individuals=indiv,
+        )

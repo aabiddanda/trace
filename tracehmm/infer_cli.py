@@ -1,11 +1,12 @@
 """CLI for TRACE."""
 import logging
 import sys
-from tracehmm import TRACE
 
 import click
 import numpy as np
 import pandas as pd
+
+from tracehmm import TRACE
 
 # Setup the logging configuration for the CLI
 logging.basicConfig(
