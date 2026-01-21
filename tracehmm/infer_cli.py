@@ -1,7 +1,7 @@
 """CLI for TRACE."""
 import logging
 import sys
-from trace import GhostProductHMM
+from tracehmm import TRACE
 
 import click
 import numpy as np

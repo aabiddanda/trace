@@ -1,4 +1,4 @@
-"""Setup module for building karyohmm."""
+"""Setup module for building TRACE."""
 
 
 from distutils.core import Extension
@@ -10,8 +10,8 @@ from setuptools import setup
 
 extensions = [
     Extension(
-        "ghosthmm_utils",
-        ["ghosthmm/ghosthmm_utils.pyx"],
+        "trace_utils",
+        ["tracehmm/trace_utils.pyx"],
         include_dirs=[numpy.get_include()],
     )
 ]

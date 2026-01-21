@@ -12,8 +12,7 @@ from scipy.special import logsumexp as logsumexp_sp
 from scipy.stats import gamma as gamma_sp
 from scipy.stats import t as t_sp
 from tqdm import tqdm
-
-from .trace_utils import (
+from trace_utils import (
     backward_algo_product,
     extract_n_coal_cython,
     forward_algo_product,
