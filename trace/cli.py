@@ -17,16 +17,24 @@ logging.basicConfig(
 
 @click.command()
 @click.option(
+    "--mode",
+    "-m",
+    required=True,
+    multiple=False,
+    type=click.Choice(["extract", "infer", "summarize"]),
+    help="Mode.",
+)
+@click.option(
     "--input",
     "-i",
-    required=True,
+    required=False,
     type=click.Path(exists=True),
     help="Input data in tskit format.",
 )
 @click.option(
     "--time",
     "-t",
-    required=True,
+    required=False,
     type=float,
     default=15e3,
     help="Focal time for branch.",
@@ -47,9 +55,16 @@ logging.basicConfig(
     help="Output file prefix.",
 )
 def main(
-    input,
-    t,
+    mode="extract",
+    input=None,
+    time=15e3,
     out="trace",
 ):
     """TRACE-Inference CLI."""
-    logging.info(f"Starting to read input data {input}...")
+    logging.info(f"Starting TRACE in mode {mode}...")
+    if mode == "extract":
+        pass
+    if mode == "infer":
+        pass
+    if mode == "summarize":
+        pass

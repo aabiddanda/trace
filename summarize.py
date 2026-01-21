@@ -1,15 +1,14 @@
-import numpy as np
-import tskit
-import tszip
-import sys
-from arg_hmm.arg_hmm import GhostProductHmm
-from arg_hmm.utils import (
-    ExplicitDefaultsHelpFormatter,
-    Output_utils
-)
 import argparse
+import sys
+
+import numpy as np
 import pandas as pd
 import pybedtools
+import tskit
+import tszip
+from arg_hmm.arg_hmm import GhostProductHmm
+from arg_hmm.utils import ExplicitDefaultsHelpFormatter, Output_utils
+
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=ExplicitDefaultsHelpFormatter)
@@ -22,7 +21,7 @@ def main():
     )
     required.add_argument(
         "--out",
-        help='prefix for output file, output file will be named as [out].summary.txt',
+        help="prefix for output file, output file will be named as [out].summary.txt",
         type=str,
         required=True,
     )
@@ -76,7 +75,7 @@ def main():
             treespan = data["treespan"]
             treespan_phy = data["treespan_phy"]
             window_size = int(treespan_phy[0, 1] - treespan_phy[0, 0])
-        pp = np.zeros(shape = (len(files), 2, len(treespan)))
+        pp = np.zeros(shape=(len(files), 2, len(treespan)))
         for i, file in enumerate(files):
             with np.load(file) as d:
                 data = {k: d[k] for k in d.files}
@@ -88,19 +87,22 @@ def main():
         sys.exit(1)
 
     states = Output_utils().summarize(
-        pp = pp,
-        treespan = treespan,
-        treespan_phy = treespan_phy,
-        outpref = out_prefix,
-        chrom = chrom,
-        pp_cutoff = pp_cutoff,
-        phy_cutoff = phy_cutoff,
-        l_cutoff = l_cutoff,
-        remove_margin = int(remove_margin / window_size)  # convert bp to number of windows,
+        pp=pp,
+        treespan=treespan,
+        treespan_phy=treespan_phy,
+        outpref=out_prefix,
+        chrom=chrom,
+        pp_cutoff=pp_cutoff,
+        phy_cutoff=phy_cutoff,
+        l_cutoff=l_cutoff,
+        remove_margin=int(
+            remove_margin / window_size
+        ),  # convert bp to number of windows,
     )
     if len(files) == 1:
         data["states"] = states
         np.savez_compressed(files[0], **data)
 
+
 if __name__ == "__main__":
-    main()   
+    main()

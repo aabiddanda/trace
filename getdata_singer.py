@@ -1,15 +1,14 @@
-import tskit
-import tszip
+import argparse
 import sys
 from trace.trace import TRACE
-import argparse
-import pandas as pd
-from trace.utils import (
-    ExplicitDefaultsHelpFormatter,
-    Output_utils
-)
+from trace.utils import ExplicitDefaultsHelpFormatter, Output_utils
+
 import numpy as np
+import pandas as pd
 import pybedtools
+import tskit
+import tszip
+
 
 def get_data(ts, ind, t_archaic, windowsize, func, mask=None, chrom=None):
     genome_length = ts.sequence_length
@@ -19,7 +18,9 @@ def get_data(ts, ind, t_archaic, windowsize, func, mask=None, chrom=None):
     t2s_sub = np.zeros((len(ind), m))
     nleaves_sub = np.zeros((len(ind), m))
     hmm = TRACE()
-    tncoal, tt1s, tt2s, treespan, tnleaves = hmm.prepare_data_tmrca(ts = ts, ind = ind, t_archaic=t_archaic)
+    tncoal, tt1s, tt2s, treespan, tnleaves = hmm.prepare_data_tmrca(
+        ts=ts, ind=ind, t_archaic=t_archaic
+    )
     if mask is not None:
         mask = hmm.mask_regions(treespan, chrom, mask, f=0.99)
     else:
@@ -34,7 +35,9 @@ def get_data(ts, ind, t_archaic, windowsize, func, mask=None, chrom=None):
     t = 0
     curtrees = []
     for k in range(m):
-        while t < treespan.shape[0] and treespan[t][0] < int(k * windowsize + windowsize):
+        while t < treespan.shape[0] and treespan[t][0] < int(
+            k * windowsize + windowsize
+        ):
             if mask[t] == 1:
                 curtrees.append(t)
             else:
@@ -66,7 +69,10 @@ def get_data(ts, ind, t_archaic, windowsize, func, mask=None, chrom=None):
                         nleaves_sub[i][k] = 0
             else:
                 for j in range(len(curtrees)):
-                    treelens.append(min(treespan[curtrees[j]][1], int(k * windowsize + windowsize)) - max(treespan[curtrees[j]][0], int(k * windowsize)))
+                    treelens.append(
+                        min(treespan[curtrees[j]][1], int(k * windowsize + windowsize))
+                        - max(treespan[curtrees[j]][0], int(k * windowsize))
+                    )
                 treelens = np.array(treelens)
                 curtrees = curtrees[treelens > 1]
                 treelens = treelens[treelens > 1]
@@ -79,17 +85,22 @@ def get_data(ts, ind, t_archaic, windowsize, func, mask=None, chrom=None):
                         nleaves_sub[i][k] = 0
                 else:
                     for i in range(len(ind)):
-                        ncoal_sub[i][k] = np.average(tncoal[i][curtrees], weights=treelens)
+                        ncoal_sub[i][k] = np.average(
+                            tncoal[i][curtrees], weights=treelens
+                        )
                         t1s_sub[i][k] = np.average(tt1s[i][curtrees], weights=treelens)
                         t2s_sub[i][k] = np.average(tt2s[i][curtrees], weights=treelens)
-                        nleaves_sub[i][k] = np.average(tnleaves[i][curtrees], weights=treelens)
+                        nleaves_sub[i][k] = np.average(
+                            tnleaves[i][curtrees], weights=treelens
+                        )
             curtrees = []
-            if treespan[t-1][1] < (k+1) * windowsize + windowsize:
-                if mask[t-1] == 1:
+            if treespan[t - 1][1] < (k + 1) * windowsize + windowsize:
+                if mask[t - 1] == 1:
                     curtrees.append(t - 1)
                 else:
                     curtrees.append(-1)
     return ncoal_sub, t1s_sub, t2s_sub, nleaves_sub, treespan, accessible_windows, mask
+
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=ExplicitDefaultsHelpFormatter)
@@ -103,7 +114,7 @@ def main():
     required.add_argument(
         "--t-archaic",
         help='the time defining the "archaic" population (e.g. the split time between the archaic and modern human'
-        + ' populations should be older than this time), in generations',
+        + " populations should be older than this time), in generations",
         type=int,
         required=True,
     )
@@ -124,7 +135,7 @@ def main():
     )
     me.add_argument(
         "--individuals",
-        help="a list of individual names or id to run the HMM on, take tree node ID as default, only take" 
+        help="a list of individual names or id to run the HMM on, take tree node ID as default, only take"
         + "sample name if --sample-names is specified, specify as --individuals ind1,ind2,ind3",
         type=str,
         default=None,
@@ -138,9 +149,9 @@ def main():
     )
     optional.add_argument(
         "--sample-names",
-        help="a file containing sample names for all individuals in the tree sequence, " +
-        "tab separated, two columns, first column contains tree node id (int), " + 
-        "second column contains sample names (str)",
+        help="a file containing sample names for all individuals in the tree sequence, "
+        + "tab separated, two columns, first column contains tree node id (int), "
+        + "second column contains sample names (str)",
         type=str,
         default=None,
     )
@@ -168,7 +179,7 @@ def main():
         action="store_true",
         default=False,
     )
-    
+
     args = parser.parse_args()
 
     # read the args
@@ -223,17 +234,17 @@ def main():
         out = "chromosome\tposition\tmutation_age\n"
         for x in a:
             out += f"{x.chrom}\t{x.end}\t{x[3]}\n"
-        with open(f"{outpref}.txt", 'w') as f:
+        with open(f"{outpref}.txt", "w") as f:
             f.write(out)
         print(f"mutation ages saved to {outpref}.txt")
         sys.exit(0)
-    
+
     # handle sample names
     if indiv is not None:
-        indiv = indiv.strip("\"'").strip(",").split(',')
+        indiv = indiv.strip("\"'").strip(",").split(",")
     else:
         try:
-            with open(indiv_file, 'r') as f:
+            with open(indiv_file, "r") as f:
                 indiv = f.readlines()
             indiv = [x.strip() for x in indiv]
         except FileNotFoundError:
@@ -243,7 +254,7 @@ def main():
         indiv = [int(x) for x in indiv if len(x) > 0]
     except:
         indiv = [str(x) for x in indiv if len(x) > 0]
-    output_utils = Output_utils(samplefile = sample_names, samplename = indiv)
+    output_utils = Output_utils(samplefile=sample_names, samplename=indiv)
     if sample_names is not None:
         samplename_to_tsid, tsid_to_samplename = output_utils.read_samplename()
         if isinstance(indiv[0], str):
@@ -259,26 +270,29 @@ def main():
         except:
             print(f"chromosome ID is not specified.")
             sys.exit(1)
-    
+
     # get data
     m = int(ts.sequence_length / s) + int(ts.sequence_length % s > 0)
     ncoal = np.zeros((len(indiv), m))
     t1s = np.zeros((len(indiv), m))
     t2s = np.zeros((len(indiv), m))
-    ncoal, t1s, t2s, nleaves, treespan, accessible_windows, mask = get_data(ts, indiv, t_archaic, s, func, include_regions, chrom)
-    atreespan = np.array([[t*s, (t + 1) * s] for t in range(m)])
+    ncoal, t1s, t2s, nleaves, treespan, accessible_windows, mask = get_data(
+        ts, indiv, t_archaic, s, func, include_regions, chrom
+    )
+    atreespan = np.array([[t * s, (t + 1) * s] for t in range(m)])
     # save as npz file
     np.savez_compressed(
-        f"{outpref}.npz", 
-        ncoal = ncoal,
-        t1s = t1s,
-        t2s = t2s,
-        nleaves = nleaves,
-        marginal_treespan = treespan,
-        treespan = atreespan,
-        marginal_mask = mask,
-        accessible_windows = accessible_windows,
-        individuals = indiv,
+        f"{outpref}.npz",
+        ncoal=ncoal,
+        t1s=t1s,
+        t2s=t2s,
+        nleaves=nleaves,
+        marginal_treespan=treespan,
+        treespan=atreespan,
+        marginal_mask=mask,
+        accessible_windows=accessible_windows,
+        individuals=indiv,
     )
+
 
 main()

@@ -1,15 +1,20 @@
 """"Cython-based helper functions for HMM implementation for ghost admixture."""
 from libc.math cimport erf, exp, lgamma, log
 from libcpp cimport bool
+
+from scipy.linalg import expm
 from scipy.optimize import brentq
 from scipy.special import digamma
-from scipy.linalg import expm
 from scipy.stats import binom, hypergeom
+
 from libc.stdio cimport printf
-from libc.stdlib cimport rand, srand, RAND_MAX
+from libc.stdlib cimport RAND_MAX, rand, srand
+
 import numpy as np
-cimport numpy as cnp
+
 cimport cython
+cimport numpy as cnp
+
 cnp.import_array()
 
 DTYPE_64 = np.int64
@@ -85,7 +90,7 @@ cdef double logaddexp(double a, double b):
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
 cpdef forward_algo_product(double[:, ::1] es , double p=1e-2, double q=1e-2, double pi0=0.5):
   """Cython implementation of a helper function for the forward algorithm.
-  
+
   Arguments:
     es: emission probabilities (log space)
     p: transition probability from state 0 to state 0
@@ -123,7 +128,7 @@ cpdef forward_algo_product(double[:, ::1] es , double p=1e-2, double q=1e-2, dou
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
 cpdef backward_algo_product(double[:, ::1] es, double p=1e-2, double q=1e-2):
   """Cython implementation of backward algorithm.
-  
+
   Arguments:
     es: emission probabilities (log space)
     p: transition probability from state 0 to state 0
@@ -161,7 +166,7 @@ cpdef backward_algo_product(double[:, ::1] es, double p=1e-2, double q=1e-2):
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
 cpdef update_oneind_cython(double [:, ::1] alphas, double [:, ::1] betas, double [:, ::1] emissions, double p, double q):
   """Update the transition probabilities for the one-individual case.
-  
+
   Arguments:
     m: number of trees
   """
