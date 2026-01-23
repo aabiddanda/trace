@@ -1,5 +1,6 @@
 """CLI for TRACE."""
 import logging
+import pathlib
 import sys
 
 import click
@@ -23,7 +24,6 @@ logging.basicConfig(
     type=str,
     required=True,
 )
-
 @click.option(
     "--chrom",
     help="Chromosome ID used in the output file",
@@ -62,14 +62,57 @@ logging.basicConfig(
     required=True,
 )
 def main(
-    file=
+    file,
+    chrom,
+    posterior_threshold,
+    physical_length_threshold,
+    genetic_distance_threshold,
+    remove_margin,
     out="trace",
 ):
-    """TRACE-Inference CLI."""
-    logging.info(f"Starting TRACE in mode {mode}...")
-    if mode == "extract":
-        pass
-    if mode == "infer":
-        pass
-    if mode == "summarize":
-        pass
+    """TRACE-Summarize CLI."""
+    logging.info(f"Starting TRACE-summarize ...")
+    # # read the args
+    # chrom = args.chrom
+    # pp_cutoff = args.posterior_threshold
+    # phy_cutoff = args.physical_length_threshold
+    # l_cutoff = args.genetic_distance_threshold
+    # out_prefix = args.out
+    # file = args.file
+    # remove_margin = int(args.remove_margin) * 1000  # convert kbp to bp
+
+    # read the posterior probability file
+    # NEED: combine different chroms
+    files = file.split(",")
+    try:
+        with np.load(files[0]) as data:
+            treespan = data["treespan"]
+            treespan_phy = data["treespan_phy"]
+            window_size = int(treespan_phy[0, 1] - treespan_phy[0, 0])
+        pp = np.zeros(shape=(len(files), 2, len(treespan)))
+        for i, file in enumerate(files):
+            with np.load(file) as d:
+                data = {k: d[k] for k in d.files}
+                pp[i] = data["gammas"]
+        pp = np.mean(pp, axis=0)
+    except Exception as e:
+        print(f"Error reading the posterior probability file: {e}")
+        print(files)
+        sys.exit(1)
+
+    states = Output_utils().summarize(
+        pp=pp,
+        treespan=treespan,
+        treespan_phy=treespan_phy,
+        outpref=out_prefix,
+        chrom=chrom,
+        pp_cutoff=pp_cutoff,
+        phy_cutoff=phy_cutoff,
+        l_cutoff=l_cutoff,
+        remove_margin=int(
+            remove_margin / window_size
+        ),  # convert bp to number of windows,
+    )
+    if len(files) == 1:
+        data["states"] = states
+        np.savez_compressed(files[0], **data)
