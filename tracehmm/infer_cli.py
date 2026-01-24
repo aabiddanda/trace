@@ -156,7 +156,6 @@ def main(
             logging.info(f"loading {data_file} ...")
             data = np.load(data_file)
             individuals = data["individuals"]
-            print(individuals, indiv)
             indiv_idx = np.where(individuals == indiv)[0][0]
             oncoal = data["ncoal"][indiv_idx]
             ot1s = data["t1s"][indiv_idx]
