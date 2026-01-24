@@ -1,0 +1,11 @@
+[flake8]
+
+########## OPTIONS ##########
+# Set the maximum length that any line (with some exceptions) may be.
+max-line-length = 120
+# Set the maximum allowed McCabe complexity value for a block of code.
+max-complexity = 10
+
+########## RULES ##########
+ignore = D102,D103,E265,E731,W503,C901,E501
+exclude = .git,__pycache__

@@ -5,7 +5,6 @@ from distutils.core import Extension
 
 import numpy
 from Cython.Build import cythonize
-from Cython.Compiler import Options
 from setuptools import setup
 
 extensions = [

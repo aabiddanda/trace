@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 
 
-@click.command()
+@click.command(context_settings={"show_default": True})
 @click.option(
     "--file",
     help="Posterior probability file from trace-infer, end with .xss.npz. Multiple files are allowed, separated by comma",
@@ -96,23 +96,20 @@ def main(
                 pp[i] = data["gammas"]
         pp = np.mean(pp, axis=0)
     except Exception as e:
-        print(f"Error reading the posterior probability file: {e}")
-        print(files)
+        logging.info(f"Error reading the posterior probability file: {e}")
+        logging.info(f"Total files: {files}")
         sys.exit(1)
 
-    states = Output_utils().summarize(
+    logging.info(f"Writing output to {out}.summary.txt ...")
+    states = OutputUtils().summarize(
         pp=pp,
         treespan=treespan,
         treespan_phy=treespan_phy,
-        outpref=out_prefix,
+        outpref=out,
         chrom=chrom,
-        pp_cutoff=pp_cutoff,
-        phy_cutoff=phy_cutoff,
-        l_cutoff=l_cutoff,
-        remove_margin=int(
-            remove_margin / window_size
-        ),  # convert bp to number of windows,
+        pp_cutoff=posterior_threshold,
+        phy_cutoff=physical_length_threshold,
+        l_cutoff=genetic_distance_threshold,
+        remove_margin=int(int(remove_margin * 1000) / window_size),
     )
-    if len(files) == 1:
-        data["states"] = states
-        np.savez_compressed(files[0], **data)
+    logging.info(f"Output written to {out}.summary.txt!")

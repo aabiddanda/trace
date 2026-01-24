@@ -16,7 +16,7 @@ logging.basicConfig(
 )
 
 
-@click.command()
+@click.command(context_settings={"show_default": True})
 @click.option(
     "--individual",
     required=True,
