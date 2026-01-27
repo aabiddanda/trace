@@ -57,24 +57,29 @@ class OutputUtils:
                 j = i
                 temp_pos = []
                 temp_pp = []
-                while (
-                    j < len(indiv_pp[1]) and indiv_pp[1][j] >= arc_cutoff
-                ):
+                while j < len(indiv_pp[1]) and indiv_pp[1][j] >= arc_cutoff:
                     temp_pos.append(j)
                     temp_pp.append(indiv_pp[1][j])
                     j += 1
                 if (
-                    np.mean(temp_pp) >= pp_cutoff 
-                    and treespan[np.max(temp_pos)][1] 
-                    - treespan[np.min(temp_pos)][0]
+                    np.mean(temp_pp) >= pp_cutoff
+                    and treespan[np.max(temp_pos)][1] - treespan[np.min(temp_pos)][0]
                     >= l_cutoff
                     and treespan_phy[np.max(temp_pos)][1]
                     - treespan_phy[np.min(temp_pos)][0]
                     >= phy_cutoff
-                    ):
+                ):
                     start = treespan_phy[temp_pos[0]][0]
                     end = treespan_phy[temp_pos[-1]][1]
-                    tracts.append([start, end, np.mean(temp_pp), end - start, treespan[temp_pos[-1]][1] - treespan[temp_pos[0]][0]])
+                    tracts.append(
+                        [
+                            start,
+                            end,
+                            np.mean(temp_pp),
+                            end - start,
+                            treespan[temp_pos[-1]][1] - treespan[temp_pos[0]][0],
+                        ]
+                    )
                     states[np.array(temp_pos)] = 1
                 i = j
             else:
@@ -97,7 +102,12 @@ class OutputUtils:
         # read pp matrix, 0 is human, 1 is archaic, for each chromosome separately
         out = ""
         tracts, states = self.filter_tracts(
-            pp, treespan, treespan_phy, pp_cutoff=pp_cutoff, phy_cutoff=phy_cutoff, l_cutoff=l_cutoff
+            pp,
+            treespan,
+            treespan_phy,
+            pp_cutoff=pp_cutoff,
+            phy_cutoff=phy_cutoff,
+            l_cutoff=l_cutoff,
         )
         for i in range(len(tracts)):
             out += (

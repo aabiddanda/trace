@@ -20,8 +20,8 @@ logging.basicConfig(
 @click.command(context_settings={"show_default": True})
 @click.option(
     "--files",
-    help="Posterior probability file from trace-infer, end with .xss.npz. Multiple files (for the same individual, " 
-   + "different chromosomes) are allowed, separated by comma",
+    help="Posterior probability file from trace-infer, end with .xss.npz. Multiple files (for the same individual, "
+    + "different chromosomes) are allowed, separated by comma",
     type=str,
     required=True,
 )
@@ -70,7 +70,9 @@ def main(
     # read the posterior probability file
     files = files.split(",")
     chroms = chroms.split(",")
-    assert len(chroms) == len(files), "Number of chromosomes must match number of files!"
+    assert len(chroms) == len(
+        files
+    ), "Number of chromosomes must match number of files!"
     out_pps = []
     out_treespans = []
     out_treespans_phy = []
