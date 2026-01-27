@@ -71,13 +71,7 @@ def verify_indivs(indiv=None, sample_names=None):
     return indiv
 
 
-def get_data(ts, ind, t_archaic, windowsize, func, mask=None, chrom=None):
-    genome_length = ts.sequence_length
-    m = int(genome_length / windowsize) + int(genome_length % windowsize > 0)
-    ncoal_sub = np.zeros((len(ind), m))
-    t1s_sub = np.zeros((len(ind), m))
-    t2s_sub = np.zeros((len(ind), m))
-    nleaves_sub = np.zeros((len(ind), m))
+def get_data(ts, ind, t_archaic, windowsize, mask=None, chrom=None):
     hmm = TRACE()
     tncoal, tt1s, tt2s, treespan, tnleaves = hmm.prepare_data_tmrca(
         ts=ts, ind=ind, t_archaic=t_archaic
@@ -86,8 +80,16 @@ def get_data(ts, ind, t_archaic, windowsize, func, mask=None, chrom=None):
         mask = hmm.mask_regions(treespan, chrom, mask, f=0.99)
     else:
         mask = np.ones(treespan.shape[0])
-    accessible_windows = np.ones(m)
     treespan = treespan.astype(int)
+    if windowsize is None:
+        return tncoal, tt1s, tt2s, tnleaves, treespan, mask, mask
+    genome_length = ts.sequence_length
+    m = int(genome_length / windowsize) + int(genome_length % windowsize > 0)
+    ncoal_sub = np.zeros((len(ind), m))
+    t1s_sub = np.zeros((len(ind), m))
+    t2s_sub = np.zeros((len(ind), m))
+    nleaves_sub = np.zeros((len(ind), m))
+    accessible_windows = np.ones(m)
     if len(ind) == 1:
         tncoal = np.array([tncoal])
         tt1s = np.array([tt1s])
@@ -180,25 +182,19 @@ def get_data(ts, ind, t_archaic, windowsize, func, mask=None, chrom=None):
 @click.option(
     "--samples",
     "-s",
-    required=False,
     type=str,
-    help="List of sampled individuals to run analysis for.",
+    help="List of sampled individuals to run analysis for, comma separated (no spaces). "
+    + "Recognizes tree node IDs (int, default) or sample names (str, if --sample-names is provided).",
+    default=None,
 )
 @click.option(
     "--window-size",
     "-w",
     required=False,
     type=int,
-    default=1000,
-    help="Window size summarizing SINGER tree sequences.",
-)
-@click.option(
-    "--func",
-    "-f",
-    required=False,
-    type=click.Choice(["mean", "median"]),
-    default="mean",
-    help="Summarize function for windows.",
+    default=None,
+    help="Window size summarizing tree sequences (required if working with multiple posterior tree sequences "
+    + "like outputs from SINGER). If not provided, uses the marginal trees directly.",
 )
 @click.option(
     "--sample-names",
@@ -220,12 +216,12 @@ def get_data(ts, ind, t_archaic, windowsize, func, mask=None, chrom=None):
     type=click.Path(exists=True),
     default=None,
 )
-@click.option(
-    "--mutation-age",
-    help="only extract mutation ages in the tree sequence, limited by include regions if specified",
-    is_flag=True,
-    default=False,
-)
+# @click.option(
+#     "--mutation-age",
+#     help="only extract mutation ages in the tree sequence, limited by include regions if specified",
+#     is_flag=True,
+#     default=False,
+# )
 @click.option(
     "--out",
     "-o",
@@ -239,11 +235,10 @@ def main(
     t_archaic=15e3,
     samples=None,
     window_size=None,
-    func="mean",
     sample_names=None,
     chrom=None,
     include_regions=None,
-    mutation_age=None,
+    # mutation_age=None,
     out="trace",
 ):
     """TRACE-Extract CLI."""
@@ -257,52 +252,51 @@ def main(
         logging.info(f"Unrecognized file extension: {tree_file}! exiting ...")
         sys.exit(1)
 
-    if mutation_age:
-        logging.info(f"Extracting mutations to write from {tree_file} ...")
-        write_mutation_ages(
-            ts, chrom=chrom, include_regions=include_regions, outfix=out
-        )
-    else:
-        # NOTE: you probably have to error out to make sure both are not None...
-        logging.info("Verifying individual labels ...")
-        logging.info(f"Comparing {samples} and {sample_names} ...")
-        indiv = verify_indivs(samples, sample_names)
-        if include_regions is not None:
-            if chrom is None:
-                logging.info(
-                    "chromosome identifier is not specified (required when using --include-regions) ... exiting."
-                )
-                sys.exit(1)
-        # This is the actual look to run ...
-        logging.info(
-            f"Extracting TRACE-information from {tree_file} across {len(indiv)} individuals ..."
-        )
+    # if mutation_age:
+    #     logging.info(f"Extracting mutations to write from {tree_file} ...")
+    #     write_mutation_ages(
+    #         ts, chrom=chrom, include_regions=include_regions, outfix=out
+    #     )
+    # else:
+    # NOTE: you probably have to error out to make sure both are not None...
+    logging.info("Verifying individual labels ...")
+    logging.info(f"Comparing {samples} and {sample_names} ...")
+    indiv = verify_indivs(samples, sample_names)
+    if include_regions is not None:
+        if chrom is None:
+            logging.info(
+                "chromosome identifier is not specified (required when using --include-regions) ... exiting."
+            )
+            sys.exit(1)
+    # This is the actual look to run ...
+    logging.info(
+        f"Extracting TRACE-information from {tree_file} across {len(indiv)} individuals ..."
+    )
+    ncoal, t1s, t2s, nleaves, treespan, accessible_windows, mask = get_data(
+        ts, indiv, t_archaic, window_size, include_regions, chrom
+    )
+    if window_size is not None:
         m = int(ts.sequence_length / window_size) + int(
             ts.sequence_length % window_size > 0
-        )
-        ncoal = np.zeros((len(indiv), m))
-        t1s = np.zeros((len(indiv), m))
-        t2s = np.zeros((len(indiv), m))
-        ncoal, t1s, t2s, nleaves, treespan, accessible_windows, mask = get_data(
-            ts, indiv, t_archaic, window_size, func, include_regions, chrom
         )
         atreespan = np.array(
             [[t * window_size, (t + 1) * window_size] for t in range(m)]
         )
-        logging.info(
-            f"Extracting TRACE-information from {tree_file} across {len(indiv)} individuals ..."
-        )
+    else:
+        atreespan = treespan
+    logging.info(
+        f"Extracting TRACE-information from {tree_file} across {len(indiv)} individuals ..."
+    )
 
-        logging.info(f"Writing output to {out}.npz ...")
-        np.savez_compressed(
-            f"{out}.npz",
-            ncoal=ncoal,
-            t1s=t1s,
-            t2s=t2s,
-            nleaves=nleaves,
-            marginal_treespan=treespan,
-            treespan=atreespan,
-            marginal_mask=mask,
-            accessible_windows=accessible_windows,
-            individuals=indiv,
-        )
+    logging.info(f"Writing output to {out}.npz ...")
+    np.savez_compressed(
+        f"{out}.npz",
+        ncoal=ncoal,
+        t1s=t1s,
+        t2s=t2s,
+        marginal_treespan=treespan,
+        treespan=atreespan,
+        marginal_mask=mask,
+        accessible_windows=accessible_windows,
+        individuals=indiv,
+    )

@@ -25,29 +25,26 @@ logging.basicConfig(
     + "sample name if --sample-names is specified.",
 )
 @click.option(
-    "--npz-file",
+    "--npz-files",
     required=False,
-    type=click.Path(exists=True),
-    help="Input data in tskit format.",
+    type=str,
+    help="Input data in npz format (output from trace-extract). If multiple chromosomes are provided, "
+    + "separate by comma (no spaces).",
+    default=None,
 )
 @click.option(
-    "--data-file",
-    help="a list of .npz/npy files, output from trace-extract",
+    "--data-files",
+    help="a list of .npz/npy files, outputs from trace-extract, one file per line"
+    + " (if multiple chromosomes are provided, provide one data file per chromosome, separated by comma, no space).",
     type=str,
     default=None,
 )
 @click.option(
-    "--chrom",
-    help="chromosome ID for the tree sequence, must match the chromosome ID in the include regions file",
+    "--chroms",
+    help="chromosome ID for the tree sequence, must match the chromosome ID in the include regions file. "
+    + "If multiple chromosomes are provided, separate by comma (no spaces).",
     type=str,
-    default=None,
-)
-@click.option(
-    "--subrange",
-    help="a subrange of treesequence to run TRACE on, specify as --subrange lowerEdge,upperEdge, use "
-    + "the whole tree sequence as default",
-    type=str,
-    default=None,
+    default="chr1",
 )
 @click.option(
     "--func",
@@ -55,7 +52,7 @@ logging.basicConfig(
     required=False,
     type=click.Choice(["mean", "median"]),
     default="mean",
-    help="Summarize function for windows.",
+    help="Summarize function for windows across posterior tree sequences.",
 )
 @click.option(
     "--sample-names",
@@ -66,10 +63,11 @@ logging.basicConfig(
     default=None,
 )
 @click.option(
-    "--genetic-map",
+    "--genetic-maps",
     help="a HapMap formatted genetic map (see https://ftp.ncbi.nlm.nih.gov/hapmap/recombination/2011-01_phaseII_B37/ for hg19 HapMap genetic map),"
-    + "the 2nd and 4th column (1-index) should be position (bp) and genetic distance (cM); assume a uniform recombination rate of 1e-8 per"
-    + " bp per generation if not specified",
+    + "the 2nd and 4th column (1-index) should be position (bp) and genetic distance (cM); if multiple chromosomes are provided, "
+    + "separate by comma (no spaces). "
+    + "assume a uniform recombination rate of 1e-8 per bp per generation if not specified",
     type=click.Path(exists=True),
     default=None,
 )
@@ -91,17 +89,16 @@ logging.basicConfig(
     required=True,
     type=str,
     default="trace",
-    help="Output file prefix.",
+    help="Output file prefix, output files will be named as [out].[chrom].xss.npz",
 )
 def main(
     individual,
-    npz_file,
-    data_file,
-    chrom,
-    subrange,
+    npz_files,
+    data_files,
+    chroms,
     func,
     sample_names,
-    genetic_map,
+    genetic_maps,
     seed,
     proportion_admix,
     out="trace",
@@ -109,7 +106,7 @@ def main(
     """TRACE-Inference CLI."""
     logging.info(f"Starting trace-infer...")
     logging.info(f"Setting random seed to {seed} ...")
-    chroms = str(chrom).strip(",").split(",")
+    chroms = str(chroms).strip(",").split(",")
     logging.info(f"Analysis to be run for {chroms} ...")
     if func not in ["mean", "median"]:
         logging.info(f"Unrecognized function: {func} for aggregation")
@@ -132,21 +129,15 @@ def main(
     # makesure indiv is tree node ID
     assert isinstance(indiv, int)
 
-    if subrange is not None:
-        subrange = subrange.strip("\"'").strip(",").split(",")
-        subrange = [int(x) for x in subrange]
-        logging.info(f"Restricting analysis to {subrange[0]} - {subrange[1]}")
-
     hmm = TRACE()
-
-    if (data_file is None) and (npz_file is None):
+    if (data_files is None) and (npz_files is None):
         logging.info(
             "Need either --npz-file or --data-file to be specified... exiting."
         )
         sys.exit(1)
-    if npz_file is not None:
-        logging.info(f"Loading data from {npz_file}...")
-        datafiles = str(npz_file).strip(",").split(",")
+    if npz_files is not None:
+        logging.info(f"Loading data from {npz_files}...")
+        datafiles = str(npz_files).strip(",").split(",")
         if len(chroms) != len(datafiles):
             logging.info(
                 f"Mismatch between datafiles and number of chromosomes: {len(datafiles)} != {len(chroms)} ... exiting."
@@ -162,33 +153,26 @@ def main(
             oncoal = data["ncoal"][indiv_idx]
             ot1s = data["t1s"][indiv_idx]
             ot2s = data["t2s"][indiv_idx]
-            onleaves = data["nleaves"][indiv_idx]
             oinclude_regions = data["accessible_windows"]
-            masked_ncoal = np.ma.masked_array(oncoal, mask=(oinclude_regions == 0))
-            masked_t1s = np.ma.masked_array(ot1s, mask=(oinclude_regions == 0))
-            masked_t2s = np.ma.masked_array(ot2s, mask=(oinclude_regions == 0))
-            masked_nleaves = np.ma.masked_array(onleaves, mask=(oinclude_regions == 0))
+            oncoal[oinclude_regions == 0] = 0
+            ot1s[oinclude_regions == 0] = 0
+            ot2s[oinclude_regions == 0] = 0
             chromfile_edges.append(data["treespan"].shape[0])
-            print(masked_ncoal)
             if idx == 0:
                 treespan = data["treespan"]
-                ncoal = func(masked_ncoal, axis=0).data
-                print(ncoal)
-                print(func(masked_ncoal, axis=0).data)
-                t1s = func(masked_t1s, axis=0).data
-                t2s = func(masked_t2s, axis=0).data
-                nleaves = func(masked_nleaves, axis=0).data
+                ncoal = oncoal
+                t1s = ot1s
+                t2s = ot2s
                 include_regions = oinclude_regions
             else:
                 treespan = np.vstack((treespan, data["treespan"]))
-                ncoal = np.concatenate((ncoal, func(masked_ncoal, axis=0).data))
-                t1s = np.concatenate((t1s, func(masked_t1s, axis=0).data))
-                t2s = np.concatenate((t2s, func(masked_t2s, axis=0).data))
-                nleaves = np.concatenate((nleaves, func(masked_nleaves, axis=0).data))
+                ncoal = np.concatenate((ncoal, oncoal))
+                t1s = np.concatenate((t1s, ot1s))
+                t2s = np.concatenate((t2s, ot2s))
                 include_regions = np.concatenate((include_regions, oinclude_regions))
     else:
-        logging.info(f"Running from datafiles {data_file} ...")
-        datafiles = str(data_file).strip(",").split(",")
+        logging.info(f"Running from datafiles {data_files} ...")
+        datafiles = str(data_files).strip(",").split(",")
         if len(chroms) != len(datafiles):
             logging.info(
                 f"Mismatch between datafiles and number of chromosomes: {len(datafiles)} != {len(chroms)} ... exiting."
@@ -206,7 +190,6 @@ def main(
             oncoal = data["ncoal"][indiv_idx]
             ot1s = data["t1s"][indiv_idx]
             ot2s = data["t2s"][indiv_idx]
-            onleaves = data["nleaves"][indiv_idx]
             oinclude_regions = data["accessible_windows"]
             for i in range(1, len(data_files)):
                 x = data_files[i].strip()
@@ -217,48 +200,44 @@ def main(
                 oncoal = np.vstack((oncoal, data["ncoal"][indiv_idx]))
                 ot1s = np.vstack((ot1s, data["t1s"][indiv_idx]))
                 ot2s = np.vstack((ot2s, data["t2s"][indiv_idx]))
-                onleaves = np.vstack((onleaves, data["nleaves"][indiv_idx]))
                 oinclude_regions = np.vstack(
                     (oinclude_regions, data["accessible_windows"])
                 )
             masked_ncoal = np.ma.masked_array(oncoal, mask=(oinclude_regions == 0))
             masked_t1s = np.ma.masked_array(ot1s, mask=(oinclude_regions == 0))
             masked_t2s = np.ma.masked_array(ot2s, mask=(oinclude_regions == 0))
-            masked_nleaves = np.ma.masked_array(onleaves, mask=(oinclude_regions == 0))
             chromfile_edges.append(data["treespan"].shape[0])
             if idx == 0:
                 treespan = data["treespan"]
                 ncoal = func(masked_ncoal, axis=0).data
                 t1s = func(masked_t1s, axis=0).data
                 t2s = func(masked_t2s, axis=0).data
-                nleaves = func(masked_nleaves, axis=0).data
                 include_regions = np.max(oinclude_regions, axis=0)
             else:
                 treespan = np.vstack((treespan, data["treespan"]))
                 ncoal = np.concatenate((ncoal, func(masked_ncoal, axis=0).data))
                 t1s = np.concatenate((t1s, func(masked_t1s, axis=0).data))
                 t2s = np.concatenate((t2s, func(masked_t2s, axis=0).data))
-                nleaves = np.concatenate((nleaves, func(masked_nleaves, axis=0).data))
                 include_regions = np.concatenate(
                     (include_regions, np.max(oinclude_regions, axis=0))
                 )
 
     logging.info("Initializing TRACE ...")
-    print(ncoal, data.keys())
+    print(ncoal)
     hmm.init_hmm(
         ncoal,
         treespan,
         intro_prop=proportion_admix,
-        subrange=subrange,
         include_regions=include_regions,
     )
-    if genetic_map is not None:
-        logging.info(f"loading genetic map from {genetic_map} ...")
-        gmaps = str(genetic_map).strip(",").split(",")
+    if genetic_maps is not None:
+        logging.info(f"loading genetic map from {genetic_maps} ...")
+        gmaps = str(genetic_maps).strip(",").split(",")
         if len(chroms) != len(gmaps):
             logging.info(
                 f"Mismatch between genetic maps and number of chromosomes: {len(gmaps)} != {len(chroms)} ... exiting."
             )
+            sys.exit(1)
         assert len(chroms) == len(gmaps)
         for idx, gmap in enumerate(gmaps):
             start = 0 if idx == 0 else np.sum(chromfile_edges[:idx])
@@ -286,22 +265,17 @@ def main(
     if sample_names is not None:
         indiv = tsid_to_samplename[indiv]
     for idx, chrom in enumerate(chroms):
-        if subrange is None:
-            outname = f"{out}.{chrom}.xss.npz"
-        else:
-            outname = f"{out}{indiv}.{chrom}_{subrange[0]}_{subrange[1]}.xss.npz"
+        outname = f"{out}.{chrom}.xss.npz"
         start = 0 if idx == 0 else np.sum(chromfile_edges[:idx])
         end = np.sum(chromfile_edges[: (idx + 1)])
         logging.info(f"Writing output to {outname} ...")
         np.savez_compressed(
             outname,
-            t1s=t1s[start:end],
-            t2s=t2s[start:end],
-            nleaves=nleaves[start:end],
+            # t1s=t1s[start:end],
+            # t2s=t2s[start:end],
             ncoal=ncoal[start:end],
             treespan=hmm.treespan[start:end],
             treespan_phy=hmm.treespan_phy[start:end],
-            func=args.func,
             accessible_windows=include_regions[start:end],
             params=outparams,
             gammas=np.exp(gammas[:, start:end]),

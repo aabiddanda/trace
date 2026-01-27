@@ -92,9 +92,6 @@ def main():
         pp_cutoff=pp_cutoff,
         phy_cutoff=phy_cutoff,
         l_cutoff=l_cutoff,
-        remove_margin=int(
-            remove_margin / window_size
-        ),  # convert bp to number of windows,
     )
     if len(files) == 1:
         data["states"] = states

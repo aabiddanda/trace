@@ -14,3 +14,4 @@ docs/_build/
 *.tsv.gz
 *.tsv
 *.npz
+tracehmm/__pycache__/*
