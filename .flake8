@@ -7,5 +7,5 @@ max-line-length = 120
 max-complexity = 10
 
 ########## RULES ##########
-ignore = D102,D103,E265,E731,W503,F401,C901,E501
+ignore = D102,D103,E265,E731,W503,W605,F401,C901,E501
 exclude = .git,__pycache__,docs/conf.py,old,build,dist

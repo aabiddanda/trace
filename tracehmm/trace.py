@@ -23,8 +23,10 @@ from trace_utils import (
 
 
 class TRACE:
+    """Class defining the TRACE HMM Model."""
+
     def __init__(self, t_admix=None, t_archaic=None):
-        """Initialization of the class."""
+        """Initialize the class."""
         self.ts = None
         self.emissions = None
         self.a1 = None
@@ -83,6 +85,7 @@ class TRACE:
         return self.mask
 
     def extract_ncoal(self, idx, t_archaic, subrange=None):
+        """Extract the number of coalescent events outside the focal branch."""
         if subrange is None:
             left_edge = 0
             right_edge = self.ts.sequence_length
@@ -244,6 +247,7 @@ class TRACE:
         return idx, xs, cp, cp_prime
 
     def generalized_esd_test(self, data=None, alpha=0.05, max_outlier_prop=0.1):
+        """Generalized ESD test for identifying residual outliers."""
         if data is None:
             data = self.ncoal
         else:
@@ -281,6 +285,7 @@ class TRACE:
         null_data=None,
         propintro=None,
     ):
+        """Initialize the parameters for gamma mixture distribution."""
         accessible_index = np.where(self.mask == 1)[0]
         if null_data is None:
             null_data = self.ncoal[accessible_index]
@@ -346,6 +351,7 @@ class TRACE:
         return alphas, scaler, loglik
 
     def backward_algo(self, p=1e-2, q=1e-2, emissions=None):
+        """Implement the backward algorithm for the binary hmm."""
         assert (p > 0) and (q > 0)
         assert self.emissions is not None
         if emissions is None:
@@ -368,7 +374,7 @@ class TRACE:
         return gammas, alphas, betas, loglik_fwd + loglik_bwd
 
     def update_transitions(self, gammas, alphas, betas, p, q):
-        """Updates for the transitions."""
+        """Update for transition probabilities."""
         assert alphas.size == betas.size
         assert (p > 0) and (q > 0)
         assert (p < 1) and (q < 1)
@@ -392,10 +398,7 @@ class TRACE:
         threshold=0.1,
         **kwargs,
     ):
-        """Implement the Baum-welch algorithm with
-        an ECM update step for the mixture of gammas distribution in the non-null case.
-        """
-        # Setup the accumulators for the parameters ...
+        """Implement the Baum-welch algorithm with an ECM update step for the mixture of gammas distribution in the non-null case."""
         assert niter > 0
 
         loglik_acc = np.zeros(niter + 1)
@@ -489,7 +492,7 @@ class TRACE:
         return res_dict
 
     def prepare_data_tmrca(self, ts, ind, subrange=None, t_archaic=20000):
-        """A wrapper function to prepare data for HMM."""
+        """Prepare data for HMM."""
         self.add_tree_sequence(ts, subrange=subrange)
         self.extract_ncoal(idx=ind, t_archaic=t_archaic, subrange=subrange)
         return self.ncoal, self.t1s, self.t2s, self.treespan, self.n_leaves
@@ -504,7 +507,7 @@ class TRACE:
         p=0.01,
         q=0.1,
     ):
-        """A wrapper function for HMM initiation."""
+        """Initialize HMM parameters using wrapper function."""
         self.treespan = treespan
         self.treespan_phy = np.copy(treespan, order="C")
         self.m = self.treespan.shape[0]
@@ -523,7 +526,7 @@ class TRACE:
         self.emissions[0] = self.cache_emissions(z=0)
 
     def train(self, niter=200, seed=1, threshold=0.1):
-        """A wrapper function to train HMM."""
+        """Train HMM using wrapper function."""
         np.random.seed(seed)
         res_dict = self.baum_welch_ecm(
             niter=niter,
@@ -532,7 +535,7 @@ class TRACE:
         return res_dict
 
     def decode(self):
-        """A wrapper function to decode HMM."""
+        """Decode HMM using wrapper function."""
         self.emissions[1] = self.cache_emissions(z=1)
         self.emissions[0] = self.cache_emissions(z=0)
         (

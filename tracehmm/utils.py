@@ -48,6 +48,7 @@ class OutputUtils:
         phy_cutoff=5e4,
         l_cutoff=0.05,
     ):
+        """Filter estimated tracts from TRACE based on external criteria."""
         tracts = []
         states = np.zeros(indiv_pp.shape[1])
         i = 0
@@ -97,8 +98,6 @@ class OutputUtils:
         l_cutoff=0.05,
     ):
         """Summarize all pp results, do posterior cutoff based on thresholds shown."""
-
-        # read pp matrix, 0 is human, 1 is archaic, for each chromosome separately
         out = ""
         tracts, states = self.filter_tracts(
             pp,

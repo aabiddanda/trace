@@ -48,6 +48,7 @@ def verify_indivs(indiv=None, sample_names=None):
 
 
 def get_data(ts, ind, t_archaic, windowsize, mask=None, chrom=None):
+    """Extract data from tree sequence for a specific individual haplotype."""
     hmm = TRACE()
     tncoal, tt1s, tt2s, treespan, tnleaves = hmm.prepare_data_tmrca(
         ts=ts, ind=ind, t_archaic=t_archaic

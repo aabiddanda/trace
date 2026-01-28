@@ -1,4 +1,4 @@
-#!python3
+"""Test suite for TRACE Utilities."""
 
 import pytest
 
