@@ -120,7 +120,7 @@ def main(
     # handle sample names
     try:
         indiv = int(individual)
-    except:
+    except ValueError:
         indiv = str(individual)
     output_utils = OutputUtils(samplefile=sample_names, samplename=indiv)
     if sample_names is not None:

@@ -1,5 +1,5 @@
 #!python3
 
-from trace import PerformanceUtils
-
 import pytest
+
+from tracehmm import OutputUtils

@@ -1,6 +1,5 @@
 """Utility functions for introgression in Tree-Sequences."""
 
-import argparse
 import sys
 
 import numpy as np
@@ -125,20 +124,3 @@ class OutputUtils:
                 + "\n"
             )
         return out, states
-
-
-class ExplicitDefaultsHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
-    """
-    format the help menu such that defaults are printed to help
-    only when they are explicitly stated in the parser
-    (e.g. do not print actions or Nones)
-    """
-
-    def _get_help_string(self, action):
-        """
-        returns the help string
-        """
-
-        if action.default in (None, False):
-            return action.help
-        return super()._get_help_string(action)

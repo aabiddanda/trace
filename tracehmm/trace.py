@@ -111,7 +111,7 @@ class TRACE:
                     ns.append(tree.time(node))
                 ns = np.array(ns)
                 for id_index, id in enumerate(idx):
-                    if not id in tree.samples():
+                    if id not in tree.samples():
                         sys.exit(f"Error: sample {id} is not a leaf node.")
                     xsfs = 0
                     nls = 0
@@ -194,7 +194,7 @@ class TRACE:
             _, _, _, cp = self.find_crossing_point(
                 f=f, g=g, mu1=self.emi2_a2 / self.emi2_b2
             )
-            if not cp is None:
+            if cp is not None:
                 interval = np.max(self.ncoal) - cp
                 gl = gamma_sp.cdf(cp, a=self.emi2_a2, scale=1 / self.emi2_b2)
                 fl = gamma_sp.cdf(cp, a=self.emi2_a1, scale=1 / self.emi2_b1)
@@ -327,7 +327,7 @@ class TRACE:
         )
         try:
             self.emi2_a2 = brentq(fa1, 1, 1e6)
-        except:
+        except ValueError:
             self.emi2_a2 = 1.1
         self.emi2_b2 = self.emi2_a2 * np.sum(zs1) / np.sum(subncoal * zs1)
 
@@ -447,7 +447,7 @@ class TRACE:
             )
             try:
                 self.emi2_a2 = brentq(fa1, 1, 1e6)
-            except:
+            except ValueError:
                 self.emi2_a2 = self.emi2_a2
             self.emi2_b2 = (
                 self.emi2_a2
@@ -511,13 +511,13 @@ class TRACE:
         self.p = p
         self.q = q
         self.set_constant_recomb()
-        if not include_regions is None:
+        if include_regions is not None:
             self.mask = include_regions
         else:
             self.mask = np.ones(self.treespan.shape[0])
         self.emissions = np.zeros(shape=(2, self.m))
         self.ncoal = data
-        if not intro_prop is None:
+        if intro_prop is not None:
             intro_prop = intro_prop * 100
         self.init_ncoal_gamma_params(p=p, q=q, propintro=intro_prop)
         self.emissions[0] = self.cache_emissions(z=0)

@@ -36,7 +36,6 @@ trace-infer --individual 2 --npz-files example_data/test_output.npz -o example_d
 trace-summarize --files example_data/test_infer.chr1.xss.npz --chroms chr1 --out example_data/test_summarize
 ```
 
-
 ## Interpreting Output Files
 
 1. Output from `trace-extract`: a numpy NpzFile with following numpy arrays
@@ -70,4 +69,4 @@ trace-summarize --files example_data/test_infer.chr1.xss.npz --chroms chr1 --out
 
 ## Contact
 
-If interested in this work - please contact @aabiddanda or @YulinZhang9806 via a github issue.
+If interested in this work - please contact @aabiddanda or @YulinZhang9806 via a Github issue.
