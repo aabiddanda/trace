@@ -176,14 +176,6 @@ def get_data(ts, ind, t_archaic, windowsize, mask=None, chrom=None):
     help="Window size summarizing tree sequences (required if working with multiple posterior tree sequences "
     + "like outputs from SINGER). If not provided, uses the marginal trees directly.",
 )
-# @click.option(
-#     "--sample-names",
-#     help="a file containing sample names for all individuals in the tree sequence, "
-#     + "tab separated, two columns, first column contains tree node id (int), "
-#     + "second column contains sample names (str).",
-#     type=click.Path(exists=True),
-#     default=None,
-# )
 @click.option(
     "--chrom",
     help="chromosome ID for the tree sequence, must match the chromosome ID in the include regions file.",
@@ -209,7 +201,6 @@ def main(
     t_archaic=15e3,
     individuals=None,
     window_size=None,
-    # sample_names=None,
     chrom=None,
     include_regions=None,
     out="trace",

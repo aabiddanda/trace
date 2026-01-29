@@ -1,6 +1,4 @@
 """Implementation of an HMM to detect ghost admixture."""
-import sys
-
 import numpy as np
 import pandas as pd
 import pybedtools
@@ -120,8 +118,7 @@ class TRACE:
                 ns = np.array(ns)
                 for id_index, id in enumerate(idx):
                     if id not in tree.samples():
-                        print(f"Error: sample {id} is not a leaf node.")
-                        sys.exit(1)
+                        raise ValueError(f"Error: sample {id} is not a leaf node.")
                     xsfs = 0
                     nls = 0
                     t1 = 0
