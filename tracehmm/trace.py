@@ -92,6 +92,11 @@ class TRACE:
         else:
             left_edge = subrange[0]
             right_edge = subrange[1]
+        # check t_archaic, break the code into multiple rows for better readability
+        assert 0 < t_archaic < self.ts.max_root_time, (
+            f"t_archaic must be between 0 and {self.ts.max_root_time} "
+            f"(max tree height in the tree sequence)."
+        )
         self.ncoal = []
         self.t1s = []
         self.t2s = []

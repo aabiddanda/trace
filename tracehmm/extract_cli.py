@@ -8,6 +8,7 @@ import numpy as np
 import tskit
 import tszip
 from tqdm import tqdm
+import pandas as pd
 
 from tracehmm import TRACE, OutputUtils
 
@@ -171,25 +172,25 @@ def get_data(ts, ind, t_archaic, windowsize, mask=None, chrom=None):
     type=int,
     default=None,
     help="Window size summarizing tree sequences (required if working with multiple posterior tree sequences "
-    + "like outputs from SINGER). If not provided, uses the marginal trees directly.",
+    + "like outputs from SINGER). If not provided, uses the marginal trees directly. (default: None)",
 )
 @click.option(
     "--sample-names",
     help="a file containing sample names for all individuals in the tree sequence, "
     + "tab separated, two columns, first column contains tree node id (int), "
-    + "second column contains sample names (str)",
+    + "second column contains sample names (str).  (default: None)",
     type=click.Path(exists=True),
     default=None,
 )
 @click.option(
     "--chrom",
-    help="chromosome ID for the tree sequence, must match the chromosome ID in the include regions file",
+    help="chromosome ID for the tree sequence, must match the chromosome ID in the include regions file.  (default: None)",
     type=str,
     default=None,
 )
 @click.option(
     "--include-regions",
-    help="a BED file containing the INCLUDE regions for the tree sequence",
+    help="A BED file containing the INCLUDE regions for the tree sequence. (default: None)",
     type=click.Path(exists=True),
     default=None,
 )
@@ -232,6 +233,19 @@ def main(
                 "chromosome identifier is not specified (required when using --include-regions) ... exiting."
             )
             sys.exit(1)
+        # check include regions file is a valid bed file
+        include_regions_df = pd.read_csv(
+            include_regions, sep="\t", header=None, names=["chrom", "start", "end"]
+        )
+        assert len(include_regions_df.columns) == 3, (
+            "Include regions file must be a valid BED file with 3 columns: chrom, start, end."
+        )
+        assert len(
+            include_regions_df["chrom"].unique()
+        ) == 1, "Include regions file must contain only one chromosome."
+        assert include_regions_df["chrom"].unique()[0] == chrom, (
+            "Chromosome ID in include regions file must match the provided --chrom argument."
+        )
     logging.info(
         f"Extracting TRACE-information from {tree_file} across {len(indiv)} individuals ..."
     )
