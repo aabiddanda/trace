@@ -1,4 +1,4 @@
-"""Testing suite for TRACE HMM."""
+"""Testing suite for TRACE HMM functions."""
 
 import msprime as msp
 import pytest
@@ -44,3 +44,27 @@ def test_extract_ncoal(ts):
     # NOTE: there is some funkiness about the random seed setting here ...
     ncoal, t1s, t2s, n_leaves = hmm.extract_ncoal(idx=0, t_archaic=15e3)
     assert ncoal.size > 0
+
+
+@pytest.mark.parametrize("ts", [ts1, ts2])
+def test_extract_ncoal_bad_idx(ts):
+    """Test extraction of number of coalescent events from TRACE."""
+    hmm = TRACE()
+    hmm.add_tree_sequence(ts)
+    # NOTE: there is some funkiness about the random seed setting here ...
+    assert hmm.ts is not None
+    x = int(2 * hmm.ts.num_samples + 1)
+    with pytest.raises(ValueError):
+        ncoal, t1s, t2s, n_leaves = hmm.extract_ncoal(idx=x, t_archaic=15e3)
+
+
+@pytest.mark.parametrize("ts", [ts1, ts2])
+@pytest.mark.parametrize("t", [-100, 0.0, "x"])
+def test_extract_ncoal_bad_time(ts, t):
+    """Test extraction of number of coalescent events from TRACE."""
+    hmm = TRACE()
+    hmm.add_tree_sequence(ts)
+    # NOTE: there is some funkiness about the random seed setting here ...
+    assert hmm.ts is not None
+    with pytest.raises(AssertionError, TypeError):
+        ncoal, t1s, t2s, n_leaves = hmm.extract_ncoal(idx=0, t_archaic=t)
