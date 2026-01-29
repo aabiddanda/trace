@@ -44,9 +44,9 @@ Here I want to show an example of applying TRACE to ARGs inferred from real data
 
 I would assume that we already have `Relate` or `SINGER` run on a dataset that we are interested in analyzing here. Since TRACE only accepts tree sequences (`.trees` or `.tsz`) as input, we need to convert raw outputs from these programs to `tskit` formats.
 
-For `Relate`, please checkout https://github.com/leospeidel/relate_lib.
+For Relate, please checkout https://github.com/leospeidel/relate_lib.
 
-For `SINGER`, please checkout https://github.com/popgenmethods/SINGER for module `convert_to_tskit`
+For SINGER, please checkout https://github.com/popgenmethods/SINGER for module `convert_to_tskit`
 
 ### Extracting observation data from ARGs
 
@@ -60,7 +60,7 @@ tree_node_id    haplotype_name
 3   ind2_hap2
 ```
 
-`Relate` produces 1 tree sequence per chromosome. Example output files for a dataset (name: dataset1) would have a structure like this
+Relate produces one tree sequence per chromosome. Example output files for a dataset (name: dataset1) would have a structure like this
 
 ```
 relate
@@ -69,7 +69,7 @@ relate
 └── dataset1_chr3.tsz
 ```
 
-`SINGER` usually outputs multiple trees per chromosome depending on the input parameters we set. I would assume that we sampled 3 posterior tree sequences per chromosome when running `SINGER`. Then an example result directory would have a structure like this
+SINGER usually outputs multiple trees per chromosome depending on the input parameters we set. I would assume that we sampled 3 posterior tree sequences per chromosome when running `SINGER`. Then an example result directory would have a structure like this
 
 ```
 singer
@@ -87,7 +87,7 @@ singer
     └── dataset1_chr3_sample3.tsz
 ```
 
-We need to extract observation data for haplotype 0-3 (sample node ID 0-3, individual 0-1) from all tree sequences provided. An example run on one of the `Relate` output tree sequence would be
+We need to extract observation data for haplotype 0-3 (sample node ID 0-3, individual 0-1) from all tree sequences (`.tsz` files) provided. An example run on one of the Relate output tree sequence would be
 
 ```
 # This would produce output file relate/dataset1_t15000_group1_chr1.npz
@@ -112,7 +112,7 @@ We need to run this command separately for each tree sequence file. We recommand
 
 ### Running TRACE inference
 
-After the previous step, our result folders should now contain `.npz` files for each `.tsz` file. An example directory structure would look like (`.tsz` files are not shown since they are not relavant)
+After the previous step, our result folders should now contain `.npz` files extracted from each `.tsz` file. An example directory structure would look like (`.tsz` files are not shown since they are not relevant)
 
 ```
 relate
@@ -134,6 +134,75 @@ singer
     ├── dataset1_t15000_strictmask_group1_chr3_sample2.npz
     └── dataset1_t15000_strictmask_group1_chr3_sample3.npz
 ```
+
+We then need to run TRACE on each haplotype separately. An example run on haplotype 2 on Relate outputs applying genetic maps from HapMap would be
+
+```
+# define inputs
+> npzfile_string=$(printf "relate/dataset1_t15000_strictmask_group1_chr%d.npz," {1..3} | sed 's/,$//')
+> chrom_string=$(printf "chr%d," {1..3} | sed 's/,$//')
+> gmap_string=$(printf "genetic_map_hg38_chr%d.txt," {1..3} | sed 's/,$//')
+
+# This would produce three output files: relate/dataset1_t15000_strictmask_ind2.chr1.xss.npz, relate/dataset1_t15000_strictmask_ind2.chr2.xss.npz, relate/dataset1_t15000_strictmask_ind2.chr3.xss.npz
+> trace-infer -i 2 --npz-files $npzfile_string --chroms $chrom_string --genetic-maps $gmap_string -o relate/dataset1_t15000_strictmask_ind2
+```
+
+To run TRACE on SINGER outputs, we need to first prepare data files containing all SINGER posterior tree sequences information for the same chromosome. An example for chromosome 1 in this example would be
+
+```
+# Same files could be produced for chr2 and chr3
+> cat singer_data_chr1.txt
+singer/chr1/dataset1_t15000_strictmask_group1_chr1_sample1.npz
+singer/chr1/dataset1_t15000_strictmask_group1_chr1_sample2.npz
+singer/chr1/dataset1_t15000_strictmask_group1_chr1_sample3.npz
+```
+
+Then, we need to run TRACE on each haplotype separately. An example run on haplotype 2 applying genetic maps from HapMap would be (note we use `--data-files` instead of `--npz-files` for inputs)
+
+```
+# define inputs
+> datafile_string=$(printf "singer/singer_data_chr%d.txt," {1..3} | sed 's/,$//')
+> chrom_string=$(printf "chr%d," {1..3} | sed 's/,$//')
+> gmap_string=$(printf "genetic_map_hg38_chr%d.txt," {1..3} | sed 's/,$//')
+
+# This would produce three output files: singer/dataset1_t15000_strictmask_ind2.chr1.xss.npz, singer/dataset1_t15000_strictmask_ind2.chr2.xss.npz, singer/dataset1_t15000_strictmask_ind2.chr3.xss.npz
+> trace-infer -i 2 --data-files $datafile_string --chroms $chrom_string --genetic-maps $gmap_string -o singer/dataset1_t15000_strictmask_ind2
+```
+
+We need to run this command separately for each individual. We recommand analyzing all chromosomes together as the way we suggest, as short chromosomes might have too limited data to train the Hidden Markov Model accurately. TRACE would automatically output results for each chromosome separately. We recommand parallelize this step across individuals.
+
+### Getting archaic segments
+
+Finally, we run `trace-summarize` to get archaic segments on each individual from TRACE inference results. From the previous step, our result folders should now contain `.xss.npz` files for each individual haplotype for every chromosome.
+
+```
+.
+├── dataset1_t15000_strictmask_ind0.chr1.xss.npz
+├── dataset1_t15000_strictmask_ind0.chr2.xss.npz
+├── dataset1_t15000_strictmask_ind0.chr3.xss.npz
+├── dataset1_t15000_strictmask_ind1.chr1.xss.npz
+├── dataset1_t15000_strictmask_ind1.chr2.xss.npz
+├── dataset1_t15000_strictmask_ind1.chr3.xss.npz
+├── dataset1_t15000_strictmask_ind2.chr1.xss.npz
+├── dataset1_t15000_strictmask_ind2.chr2.xss.npz
+├── dataset1_t15000_strictmask_ind2.chr3.xss.npz
+├── dataset1_t15000_strictmask_ind3.chr1.xss.npz
+├── dataset1_t15000_strictmask_ind3.chr2.xss.npz
+└── dataset1_t15000_strictmask_ind3.chr3.xss.npz
+```
+
+An example of getting archaic segments for haplotype 0 from results above is
+
+```
+# define inputs
+> summarizefile_string=$(printf "dataset1_t15000_strictmask_ind0.chr%d.xss.npz," {1..3} | sed 's/,$//')
+> chrom_string=$(printf "chr%d," {1..3} | sed 's/,$//')
+
+# This would produce output file: dataset1_t15000_strictmask_ind2.summary.txt
+> trace-summarize -f $summarizefile_string -c $chrom_string -o dataset1_t15000_strictmask_ind2
+```
+
+We need to run this command separately for each individual. We could change the filters applied to TRACE outputs by specifying `--posterior-threshold`, `--physical-length-threshold` and `--genetic-distance-threshold`.
 
 ## Interpreting Output Files
 

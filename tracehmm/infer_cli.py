@@ -7,7 +7,7 @@ import click
 import numpy as np
 import pandas as pd
 
-from tracehmm import TRACE, OutputUtils
+from tracehmm import TRACE
 
 # Setup the logging configuration for the CLI
 logging.basicConfig(
@@ -69,7 +69,7 @@ logging.basicConfig(
     + "the 2nd and 4th column (1-index) should be position (bp) and genetic distance (cM); if multiple chromosomes are provided, "
     + "separate by comma (no spaces). "
     + "assume a uniform recombination rate of 1e-8 per bp per generation if not specified",
-    type=click.Path(exists=True),
+    type=str,
     default=None,
 )
 @click.option(
