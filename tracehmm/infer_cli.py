@@ -78,12 +78,6 @@ logging.basicConfig(
     type=int,
     default=42,
 )
-# @click.option(
-#     "--proportion-admix",
-#     help="Prior probability of admixture (0 - 0.5), no need to specify. default is None.",
-#     type=float,
-#     default=None,
-# )
 @click.option(
     "--out",
     "-o",
@@ -119,7 +113,7 @@ def main(
     # handle sample names
     try:
         indiv = int(individual)
-    except:
+    except ValueError:
         indiv = str(individual)
     output_utils = OutputUtils(samplefile=sample_names, samplename=indiv)
     if sample_names is not None:
@@ -201,7 +195,9 @@ def main(
                 sys.exit(1)
             for fp in data_files:
                 if not Path(fp.strip()).is_file():
-                    logging.info(f"File {fp} from {data_file} is not a valid filepath ... exiting.")
+                    logging.info(
+                        f"File {fp} from {data_file} is not a valid filepath ... exiting."
+                    )
                     sys.exit(1)
             data = np.load(data_files[0].strip())
             individuals = data["individuals"]
@@ -265,10 +261,16 @@ def main(
                 first_line = first_line.strip().split()
                 if first_line[0] == chroms[idx]:
                     skiprow = False
-            gmap_df = pd.read_csv(gmap, sep="\s+", header=None, skiprows=int(skiprow), columns = ["chrom","pos","rate","gen_dist"])
-            assert gmap_df["chrom"].nunique() == 1, (
-                "Genetic map file must contain only one chromosome."
+            gmap_df = pd.read_csv(
+                gmap,
+                sep="\s+",
+                header=None,
+                skiprows=int(skiprow),
+                columns=["chrom", "pos", "rate", "gen_dist"],
             )
+            assert (
+                gmap_df["chrom"].nunique() == 1
+            ), "Genetic map file must contain only one chromosome."
             assert gmap_df["chrom"].unique()[0] == chroms[idx], (
                 "Chromosome ID in genetic map file must match the one provided in --chroms.\n"
                 f"Provided chromosome ID: {chroms[idx]}, chromosome ID in genetic map file: {gmap_df['chrom'].unique()[0]}"
@@ -276,17 +278,17 @@ def main(
             try:
                 gmap_df["pos"] = gmap_df["pos"].astype(float)
                 gmap_df["gen_dist"] = gmap_df["gen_dist"].astype(float)
-            except:
+            except (KeyError, ValueError):
                 print(
                     f"Position or genetic distance column in genetic map file {gmap} contains non-numeric values ... exiting."
                 )
                 sys.exit(1)
-            assert gmap_df["pos"].is_monotonic_increasing, (
-                f"Position column in genetic map file {gmap} must be sorted in increasing order ..."
-            )
-            assert gmap_df["gen_dist"].is_monotonic_increasing, (
-                f"Genetic distance column in genetic map file {gmap} must be sorted in increasing order ..."
-            )
+            assert gmap_df[
+                "pos"
+            ].is_monotonic_increasing, f"Position column in genetic map file {gmap} must be sorted in increasing order ..."
+            assert gmap_df[
+                "gen_dist"
+            ].is_monotonic_increasing, f"Genetic distance column in genetic map file {gmap} must be sorted in increasing order ..."
             start = 0 if idx == 0 else np.sum(chromfile_edges[:idx])
             end = np.sum(chromfile_edges[: (idx + 1)])
             hmm.treespan[start:end] = hmm.add_recombination_map(
@@ -318,8 +320,6 @@ def main(
         logging.info(f"Writing output to {outname} ...")
         np.savez_compressed(
             outname,
-            # t1s=t1s[start:end],
-            # t2s=t2s[start:end],
             ncoal=ncoal[start:end],
             treespan=hmm.treespan[start:end],
             treespan_phy=hmm.treespan_phy[start:end],

@@ -5,10 +5,10 @@ from pathlib import Path
 
 import click
 import numpy as np
+import pandas as pd
 import tskit
 import tszip
 from tqdm import tqdm
-import pandas as pd
 
 from tracehmm import TRACE, OutputUtils
 
@@ -25,12 +25,12 @@ def verify_indivs(indiv, sample_names=None):
     indiv = indiv.strip("\n").strip(",").split(",")
     assert len(indiv) > 0, "No individuals provided ... exiting."
     if sample_names is not None:
-        assert Path(sample_names).is_file(), (
-            f"Sample names file {sample_names} does not exist ... exiting."
-        )
+        assert Path(
+            sample_names
+        ).is_file(), f"Sample names file {sample_names} does not exist ... exiting."
     try:
         indiv = [int(x) for x in indiv if len(x) > 0]
-    except:
+    except ValueError:
         indiv = [str(x) for x in indiv if len(x) > 0]
     output_utils = OutputUtils(samplefile=sample_names, samplename=indiv)
     if sample_names is not None:
@@ -38,7 +38,9 @@ def verify_indivs(indiv, sample_names=None):
         if isinstance(indiv[0], str):
             for x in indiv:
                 if x not in samplename_to_tsid:
-                    logging.info(f"Sample name {x} not found in sample names file ... exiting.")
+                    logging.info(
+                        f"Sample name {x} not found in sample names file ... exiting."
+                    )
                     sys.exit(1)
             indiv = np.array([samplename_to_tsid[x] for x in indiv])
     assert isinstance(indiv[0], int)
@@ -235,12 +237,12 @@ def main(
         include_regions_df = pd.read_csv(
             include_regions, sep="\t", header=None, names=["chrom", "start", "end"]
         )
-        assert len(include_regions_df.columns) == 3, (
-            "Include regions file must be a valid BED file with 3 columns: chrom, start, end."
-        )
-        assert len(
-            include_regions_df["chrom"].unique()
-        ) == 1, "Include regions file must be a valide BED file (no header) and contain only one chromosome."
+        assert (
+            len(include_regions_df.columns) == 3
+        ), "Include regions file must be a valid BED file with 3 columns: chrom, start, end."
+        assert (
+            len(include_regions_df["chrom"].unique()) == 1
+        ), "Include regions file must be a valide BED file (no header) and contain only one chromosome."
         assert include_regions_df["chrom"].unique()[0] == chrom, (
             "Chromosome ID in include regions file must match the provided --chrom argument.\n"
             f"Provided chromosome ID: {chrom}, chromosome ID in include regions file: {include_regions_df['chrom'].unique()[0]}"

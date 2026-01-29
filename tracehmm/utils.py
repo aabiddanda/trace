@@ -31,8 +31,8 @@ class OutputUtils:
             if i == 0:
                 try:
                     treenode_id = int(s[0])
-                except:
-                    print(f"Skipping first row (header or invalid format)")
+                except (ValueError, IndexError, KeyError):
+                    print("Skipping first row (header or invalid format)")
                     continue  # Skip to next row
             try:
                 treenode_id = int(s[0])
@@ -46,7 +46,7 @@ class OutputUtils:
             elif len(s) == 0 and i == len(lines) - 1:
                 continue
             else:
-                print("Error: empty row or invalid format at row ", i)
+                print(f"Error: empty row or invalid format at row {i} ... exiting.")
                 sys.exit(1)
         return samplename_to_tsid, tsid_to_samplename
 

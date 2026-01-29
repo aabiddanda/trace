@@ -23,13 +23,13 @@ classifiers = ["Development Status :: 3 - Alpha", "Intended Audience :: Science/
 requires-python = ">= 3.9"
 dependencies = ["numpy", "scipy", "pandas", "Cython", "Click", "tqdm", "tskit", "tszip", "intervaltree", "pybedtools"]
 dynamic = ["version"]
-authors = [{name = "Arjun Biddanda", email = "abiddan1@jhu.edu"}, {name="Yulin Zhang", email="zhangyulin9806@berkeley.edu"}]
+authors = [{name="Yulin Zhang", email="zhangyulin9806@berkeley.edu"}, {name = "Arjun Biddanda", email = "abiddan1@jhu.edu"}]
 
 [project.urls]
 Homepage = "https://github.com/aabiddanda/trace"
 
 [project.optional-dependencies]
-tests = [ "pytest", "pytest-cov", "hypothesis", "flake8", "sphinx"]
+tests = ["msprime", "pytest", "pytest-cov", "hypothesis", "pytest-xdist"]
 
 [project.scripts]
 trace-extract= "tracehmm.extract_cli:main"
