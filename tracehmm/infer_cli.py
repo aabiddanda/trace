@@ -36,8 +36,8 @@ logging.basicConfig(
 )
 @click.option(
     "--data-files",
-    help="a list of .npz/npy files, outputs from trace-extract, one file per line"
-    + " (if multiple chromosomes are provided, provide one data file per chromosome, separated by comma, no space).",
+    help="a list of .npz files (outputs from trace-extrac), one file per line."
+    + " If multiple chromosomes are provided, provide one data file per chromosome, separated by comma (no spaces).",
     type=str,
     default=None,
 )
