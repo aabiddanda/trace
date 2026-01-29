@@ -21,7 +21,7 @@ In order to facilitate a basic example, we have provided some simulated data to 
 1. To extract relevant observation data for the HMM, we use:
 
 ```
-trace-extract --tree-file example_data/n10_seed10_A.tsz -s 0,1,2,3,4,5,6,7,8,9,10 -o example_data/test_output
+trace-extract --tree-file example_data/n10_seed10_A.tsz --t-archaic 15000 -s 0,1,2,3,4,5,6,7,8,9,10 -o example_data/test_output
 ```
 
 2. To infer a posterior decoding of introgression tracts, we use:
@@ -35,6 +35,90 @@ trace-infer --individual 2 --npz-files example_data/test_output.npz -o example_d
 ```
 trace-summarize --files example_data/test_infer.chr1.xss.npz --chroms chr1 --out example_data/test_summarize
 ```
+
+## Example with Relate and SINGER inferred ARGs
+
+Here I want to show an example of applying TRACE to ARGs inferred from real data. I would assume we are studying Neanderthal introgression into modern humans, so would use `--t-archaic 15000` (the user-defined timescale parater t=15000) for our analysis. This parameter should be chosen based on the aim of the study.
+
+### Handling Relate and SINGER outputs
+
+I would assume that we already have `Relate` or `SINGER` run on a dataset that we are interested in analyzing here. Since TRACE only accepts tree sequences (`.trees` or `.tsz`) as input, we need to convert raw outputs from these programs to `tskit` formats.
+
+For `Relate`, please checkout https://github.com/leospeidel/relate_lib.
+
+For `SINGER`, please checkout https://github.com/popgenmethods/SINGER for module `convert_to_tskit`
+
+### Extracting observation data from ARGs
+
+First we need to extract observation data for individuals that we are analyzing from ARGs. For this example, I would analyze haplotypes that has sample ID 0 to 3 (individual 0 to 1) in the input ARGs. Here is a file (dataset1_samples.txt) containing sample information (which could serve as the input for `--sample-names`)
+
+```
+> cat dataset1_samples.txt
+0   ind0_hap1
+1   ind0_hap2
+2   ind1_hap1
+3   ind2_hap2
+```
+
+`Relate` produces 1 tree sequence per chromosome. Example output files for a dataset (name: dataset1) would have a structure like this
+
+```
+relate
+├── dataset1_chr1.tsz
+├── dataset1_chr2.tsz
+└── dataset1_chr3.tsz
+```
+
+`SINGER` usually outputs multiple trees per chromosome depending on the input parameters we set. I would assume that we sampled 3 posterior tree sequences per chromosome when running `SINGER`. Then an example result directory would have a structure like this
+
+```
+singer
+├── chr1
+│   ├── dataset1_chr1_sample1.tsz
+│   ├── dataset1_chr1_sample2.tsz
+│   └── dataset1_chr1_sample3.tsz
+├── chr2
+│   ├── dataset1_chr2_sample1.tsz
+│   ├── dataset1_chr2_sample2.tsz
+│   └── dataset1_chr2_sample3.tsz
+└── chr3
+    ├── dataset1_chr3_sample1.tsz
+    ├── dataset1_chr3_sample2.tsz
+    └── dataset1_chr3_sample3.tsz
+```
+
+We need to extract observation data for haplotype 0-3 (sample node ID 0-3, individual 0-1) from all tree sequences provided. An example run on one of the `Relate` output tree sequence would be
+
+```
+# This would produce output file relate/dataset1_t15000_group1_chr1.npz
+> trace-extract --tree-file relate/dataset1_chr1.tsz --t-archaic 15000 --samples 0,1,2,3 -o relate/dataset1_t15000_group1_chr1
+```
+
+By specifying `--sample-names`, we could use self-defined names to specify these samples (check dataset1_samples.txt file we showed earlier)
+
+```
+# This would produce output file relate/dataset1_t15000_group1_chr1.npz
+> trace-extract --tree-file relate/dataset1_chr1.tsz --t-archaic 15000 --samples ind0_hap1,ind0_hap2,ind1_hap1,ind1_hap2 --sample-names dataset1_samples.txt -o relate/dataset1_t15000_group1_chr1
+```
+
+We could ask TRACE to only use genotype information from regions with high confidence (for example, strict / pilot masks from 1000 Genomes) by specifying `--include-regions` and `--chrom`. This would limit the following analysis on trees that overlap >99% with the input BED file in the tree sequence.
+
+```
+# This would produce output file relate/dataset1_t15000_strictmask_group1_chr1.npz
+> trace-extract --tree-file relate/dataset1_chr1.tsz --t-archaic 15000 --samples 0,1,2,3 --include-regions strictmask_chr1.bed --chrom chr1 -o relate/dataset1_t15000_strictmask_group1_chr1
+```
+
+For `SINGER` outputs, we need to specify `--window-size` parameter so that TRACE could summarize results across different posterior tree sequences.
+
+```
+# This would produce output file singer/chr1/dataset1_t15000_strictmask_group1_chr1_sample1.npz
+> trace-extract --tree-file singer/chr1/dataset1_chr1_sample1.tsz --t-archaic 15000 --samples 0,1,2,3 --include-regions strictmask_chr1.bed --chrom chr1 --window-size 1000 -o singer/chr1/dataset1_t15000_strictmask_group1_chr1_sample1
+```
+
+We need to run this command separately for each tree sequence file. We recommand extracting multiple samples in one command, which would make the most efficient usage of computation time, memory and storage space. However, this step does take some amount of time when the input chromosome is large. In this case, splitting individuals into groups and running different groups in parallel would be the best choice.
+
+### Running TRACE inference
+
 
 ## Interpreting Output Files
 
