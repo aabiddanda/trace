@@ -258,6 +258,7 @@ def main(
             sys.exit(1)
         assert len(chroms) == len(gmaps)
         for idx, gmap in enumerate(gmaps):
+            logging.info(f"Adding recombination map from {gmap} ...")
             skiprow = True
             with open(gmap, "r") as f:
                 first_line = f.readline()
@@ -269,14 +270,14 @@ def main(
                 "Genetic map file must contain only one chromosome."
             )
             assert gmap_df["chrom"].unique()[0] == chroms[idx], (
-                "Chromosome ID in genetic map file must match the provided --chrom argument.\n"
+                "Chromosome ID in genetic map file must match the one provided in --chroms.\n"
                 f"Provided chromosome ID: {chroms[idx]}, chromosome ID in genetic map file: {gmap_df['chrom'].unique()[0]}"
             )
             try:
                 gmap_df["pos"] = gmap_df["pos"].astype(float)
                 gmap_df["gen_dist"] = gmap_df["gen_dist"].astype(float)
             except:
-                logging.info(
+                print(
                     f"Position or genetic distance column in genetic map file {gmap} contains non-numeric values ... exiting."
                 )
                 sys.exit(1)
@@ -286,7 +287,6 @@ def main(
             assert gmap_df["gen_dist"].is_monotonic_increasing, (
                 f"Genetic distance column in genetic map file {gmap} must be sorted in increasing order ..."
             )
-            logging.info(f"Adding recombination map from {gmap} ...")
             start = 0 if idx == 0 else np.sum(chromfile_edges[:idx])
             end = np.sum(chromfile_edges[: (idx + 1)])
             hmm.treespan[start:end] = hmm.add_recombination_map(

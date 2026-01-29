@@ -20,11 +20,8 @@ logging.basicConfig(
 )
 
 
-def verify_indivs(indiv=None, sample_names=None):
+def verify_indivs(indiv, sample_names=None):
     """Verify the structure of the individuals provided for extraction."""
-    if (indiv is None) and (sample_names is None):
-        logging.info("Need to supply either --samples or --sample-names ... exiting.")
-        sys.exit(1)
     indiv = indiv.strip("\n").strip(",").split(",")
     assert len(indiv) > 0, "No individuals provided ... exiting."
     if sample_names is not None:

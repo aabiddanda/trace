@@ -46,7 +46,7 @@ class OutputUtils:
             elif len(s) == 0 and i == len(lines) - 1:
                 continue
             else:
-                print("Error: empty row or invalid format at row ", i + 1)
+                print("Error: empty row or invalid format at row ", i)
                 sys.exit(1)
         return samplename_to_tsid, tsid_to_samplename
 
