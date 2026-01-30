@@ -61,6 +61,9 @@ class OutputUtils:
         l_cutoff=0.05,
     ):
         """Filter estimated tracts from TRACE based on external criteria."""
+        assert 0.0 < pp_cutoff < 1.0
+        assert l_cutoff > 0
+        assert phy_cutoff > 0
         tracts = []
         states = np.zeros(indiv_pp.shape[1])
         i = 0

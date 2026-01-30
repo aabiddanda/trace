@@ -1,4 +1,4 @@
-"""Test suite for Extract CLI."""
+"""Test suite for Infer CLI."""
 
 import os
 from pathlib import Path
