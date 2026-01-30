@@ -203,3 +203,27 @@ def test_bad_genmap(ts_extract1, bad_map):
         f"trace-infer -i 2 --npz-files {ts_extract1} --chroms chr1 --genetic-maps {bad_map} -o {outfix}"
     )
     assert exit_status != 0
+
+
+def test_datafiles_multichrom(ts_extract1, ts_extract2, tmp_path_factory):
+    """Test the datafiles flag with multiple chromosomes."""
+    out_fp1 = Path(ts_extract1).with_suffix(".chr1.xss.npz")
+    out_fp2 = Path(ts_extract1).with_suffix(".chr2.xss.npz")
+    # Create a temporary datafile
+    chr1_data = tmp_path_factory.mktemp("extract_data") / "chr1_data.txt"
+    chr2_data = tmp_path_factory.mktemp("extract_data") / "chr2_data.txt"
+    with open(chr1_data, "w+") as fp:
+        fp.write(str(Path(ts_extract1).resolve()) + "\n")
+    with open(chr2_data, "w+") as fp:
+        fp.write(str(Path(ts_extract2).resolve()) + "\n")
+    assert Path(chr1_data).is_file()
+    assert Path(chr2_data).is_file()
+    outfix = Path(ts_extract1).with_suffix("")
+    exit_status = os.system(
+        f"trace-infer -i 2 --data-files {chr1_data},{chr2_data} --chroms chr1,chr2 -o {outfix}"
+    )
+    assert exit_status == 0
+    assert Path(out_fp1).is_file()
+    assert Path(out_fp2).is_file()
+    check_xss_npz_file(out_fp1)
+    check_xss_npz_file(out_fp2)
