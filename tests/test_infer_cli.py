@@ -67,22 +67,41 @@ def dumb_file(tmp_path_factory):
 
 
 @pytest.fixture(scope="session")
-def proper_chr1_regions(tmp_path_factory):
+def genetic_map(tmp_path_factory):
     """Create a dumb file ..."""
-    fn = tmp_path_factory.mktemp("extract_data") / "chr1_regions.txt"
+    fn = tmp_path_factory.mktemp("extract_data") / "genmap.txt"
     with open(fn, "w+") as out:
-        out.write("chr1\t0\t1000000\n")
-        out.write("chr1\t2000000\t4000000\n")
+        out.write("chr1\t0\t0.01\t0.0\n")
+        out.write("chr1\t1000000\t0.01\t1.0\n")
+        out.write("chr1\t2000000\t0.01\t2.0\n")
+        out.write("chr1\t3000000\t0.01\t3.0\n")
+        out.write("chr1\t4000000\t0.01\t4.0\n")
     return fn
 
 
 @pytest.fixture(scope="session")
-def bad_chr_regions(tmp_path_factory):
+def nonmono_genetic_map(tmp_path_factory):
     """Create a dumb file ..."""
-    fn = tmp_path_factory.mktemp("extract_data") / "chr1_regions_bad.txt"
+    fn = tmp_path_factory.mktemp("extract_data") / "genmap_bad.txt"
     with open(fn, "w+") as out:
-        out.write("chrX\t0\t1000000\tX\n")
-        out.write("chrX\t2000000\t1500000\tY\n")
+        out.write("chr1\t0\t0.01\t0.0\n")
+        out.write("chr1\t1000000\t0.01\t1.0\n")
+        out.write("chr1\t2000000\t0.01\t0.8\n")
+        out.write("chr1\t3000000\t0.01\t3.0\n")
+        out.write("chr1\t4000000\t0.01\t4.0\n")
+    return fn
+
+
+@pytest.fixture(scope="session")
+def chr2_genetic_map(tmp_path_factory):
+    """Create a dumb file ..."""
+    fn = tmp_path_factory.mktemp("extract_data") / "genmap_chr2.txt"
+    with open(fn, "w+") as out:
+        out.write("chr2\t0\t0.01\t0.0\n")
+        out.write("chr2\t1000000\t0.01\t1.0\n")
+        out.write("chr2\t2000000\t0.01\t2.0\n")
+        out.write("chr2\t3000000\t0.01\t3.0\n")
+        out.write("chr2\t4000000\t0.01\t4.0\n")
     return fn
 
 
@@ -127,3 +146,60 @@ def test_two_chroms(ts_extract1, ts_extract2):
     assert Path(out_fp2).is_file()
     check_xss_npz_file(out_fp1)
     check_xss_npz_file(out_fp2)
+
+
+@pytest.mark.parametrize("c", ["chr1", "", "X", "chr1,chr2,chr3"])
+def test_bad_chroms(ts_extract1, ts_extract2, c):
+    """Test extraction of a standard tszip file."""
+    outfix = Path(ts_extract1).with_suffix("")
+    exit_status = os.system(
+        f"trace-infer -i 2 --npz-files {ts_extract1},{ts_extract2} --chroms {c} -o {outfix}"
+    )
+    assert exit_status != 0
+
+
+@pytest.mark.parametrize("f", [None, "", "meanx", "range"])
+def test_bad_func(ts_extract1, f):
+    """Test extraction of a standard tszip file."""
+    outfix = Path(ts_extract1).with_suffix("")
+    exit_status = os.system(
+        f"trace-infer -i 2 --npz-files {ts_extract1},{ts_extract2} --func {f} -o {outfix}"
+    )
+    assert exit_status != 0
+
+
+def test_genmap(ts_extract1, genetic_map):
+    """Test extraction of a standard tszip file."""
+    out_fp1 = Path(ts_extract1).with_suffix(".chr1.xss.npz")
+    outfix = Path(ts_extract1).with_suffix("")
+    exit_status = os.system(
+        f"trace-infer -i 2 --npz-files {ts_extract1} --genetic-maps {genetic_map} -o {outfix}"
+    )
+    assert exit_status == 0
+    assert Path(out_fp1).is_file()
+    check_xss_npz_file(out_fp1)
+
+
+def test_multiple_genmap(ts_extract1, ts_extract2, genetic_map, chr2_genetic_map):
+    """Test extraction of a standard tszip file."""
+    out_fp1 = Path(ts_extract1).with_suffix(".chr1.xss.npz")
+    out_fp2 = Path(ts_extract1).with_suffix(".chr2.xss.npz")
+    outfix = Path(ts_extract1).with_suffix("")
+    exit_status = os.system(
+        f"trace-infer -i 2 --npz-files {ts_extract1},{ts_extract2} --chroms chr1,chr2 --genetic-maps {genetic_map},{chr2_genetic_map} -o {outfix}"
+    )
+    assert exit_status == 0
+    assert Path(out_fp1).is_file()
+    assert Path(out_fp2).is_file()
+    check_xss_npz_file(out_fp1)
+    check_xss_npz_file(out_fp2)
+
+
+@pytest.mark.parametrize("bad_map", [nonmono_genetic_map, dumb_file])
+def test_bad_genmap(ts_extract1, bad_map):
+    """Test extraction of a standard tszip file."""
+    outfix = Path(ts_extract1).with_suffix("")
+    exit_status = os.system(
+        f"trace-infer -i 2 --npz-files {ts_extract1} --chroms chr1 --genetic-maps {bad_map} -o {outfix}"
+    )
+    assert exit_status != 0

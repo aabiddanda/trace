@@ -169,7 +169,7 @@ Then, we need to run TRACE on each haplotype separately. An example run on haplo
 > trace-infer -i 2 --data-files $datafile_string --chroms $chrom_string --genetic-maps $gmap_string -o singer/dataset1_t15000_strictmask_ind2
 ```
 
-We need to run this command separately for each individual. We recommand analyzing all chromosomes together as the way we suggest, as short chromosomes might have too limited data to train the Hidden Markov Model accurately. TRACE would automatically output results for each chromosome separately. We recommand parallelize this step across individuals.
+We need to run this command separately for each individual. We recommand analyzing all chromosomes together, as short chromosomes might have too limited data to train the Hidden Markov Model accurately. TRACE automatically outputs results for each chromosome separately. We recommand to parallelize this step across individuals.
 
 ### Getting archaic segments
 
@@ -237,6 +237,15 @@ We need to run this command separately for each individual. We could change the 
     - "length(cM)": length of the segment (in cM)
 
 
+## Running Unit and Integration Testing (Developer Note)
+
+We have implemented a testing suite using `pytest` which addresses much of the functionality of the main repository.
+
+```
+pip install .[tests] # install extra dependencies just for testing
+pytest --verbose -n <cores>
+```
+
 ## Contact
 
-If interested in this work - please contact @aabiddanda or @YulinZhang9806 via a Github issue.
+For questions/bug reports, please contact @aabiddanda or @YulinZhang9806. For identified bugs, please submit an issue with a minimally working example.

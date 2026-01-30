@@ -36,7 +36,7 @@ logging.basicConfig(
 )
 @click.option(
     "--data-files",
-    help="a list of .npz files (outputs from trace-extrac), one file per line."
+    help="a list of .npz files (outputs from trace-extract), one file per line."
     + " If multiple chromosomes are provided, provide one data file per chromosome, separated by comma (no spaces).",
     type=str,
     default=None,
@@ -55,14 +55,6 @@ logging.basicConfig(
     default="mean",
     help="Summarize function for windows across posterior tree sequences.",
 )
-# @click.option(
-#     "--sample-names",
-#     help="a file containing sample names for all individuals in the tree sequence, "
-#     + "tab separated, two columns, first column contains tree node id (int), "
-#     + "second column contains sample names (str)",
-#     type=click.Path(exists=True),
-#     default=None,
-# )
 @click.option(
     "--genetic-maps",
     help="a HapMap formatted genetic map (see https://ftp.ncbi.nlm.nih.gov/hapmap/recombination/2011-01_phaseII_B37/ for hg19 HapMap genetic map),"
@@ -280,7 +272,7 @@ def main(
                 sep="\s+",
                 header=None,
                 skiprows=int(skiprow),
-                columns=["chrom", "pos", "rate", "gen_dist"],
+                names=["chrom", "pos", "rate", "gen_dist"],
             )
             assert (
                 gmap_df["chrom"].nunique() == 1
@@ -300,9 +292,6 @@ def main(
             assert gmap_df[
                 "pos"
             ].is_monotonic_increasing, f"Position column in genetic map file {gmap} must be sorted in increasing order ..."
-            assert gmap_df[
-                "gen_dist"
-            ].is_monotonic_increasing, f"Genetic distance column in genetic map file {gmap} must be sorted in increasing order ..."
             start = 0 if idx == 0 else np.sum(chromfile_edges[:idx])
             end = np.sum(chromfile_edges[: (idx + 1)])
             hmm.treespan[start:end] = hmm.add_recombination_map(
