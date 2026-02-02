@@ -239,8 +239,8 @@ def main(
                     include_regions = np.max(oinclude_regions, axis=0)
                 else:
                     logging.info(
-                        f"Warning: only one posterior tree sequence found in {data_file}," + 
-                        "no aggregation performed ..."
+                        f"Warning: only one posterior tree sequence found in {data_file},"
+                        + "no aggregation performed ..."
                     )
                     oncoal[oinclude_regions == 0] = 0
                     ncoal = oncoal
@@ -261,8 +261,8 @@ def main(
                     )
                 else:
                     logging.info(
-                        f"Warning: only one posterior tree sequence found in {data_file}," + 
-                        "no aggregation performed ..."
+                        f"Warning: only one posterior tree sequence found in {data_file},"
+                        + "no aggregation performed ..."
                     )
                     oncoal[oinclude_regions == 0] = 0
                     ncoal = np.concatenate((ncoal, oncoal))

@@ -1,5 +1,6 @@
 """CLI for trace-extract."""
 import logging
+import shutil
 import sys
 from pathlib import Path
 
@@ -221,6 +222,11 @@ def main(
     sample_names = None  # Currently disabled
     indiv = verify_indivs(individuals, sample_names)
     if include_regions is not None:
+        if shutil.which("bedtools") is None:
+            raise ValueError(
+                "No detectable `bedtools` installation for `--include-regions`. Please install for your system!"
+            )
+            sys.exit(1)
         if chrom is None:
             logging.info(
                 "chromosome identifier is not specified (required when using --include-regions) ... exiting."

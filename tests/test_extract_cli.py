@@ -1,6 +1,7 @@
 """Test suite for Extract CLI."""
 
 import os
+import shutil
 from pathlib import Path
 
 import msprime
@@ -140,12 +141,18 @@ def test_chrom_regions(tszip1, proper_chr1_regions):
     """Test defining chromosomal regions."""
     out_fp = Path(tszip1).with_suffix(".npz")
     outfix = Path(tszip1).with_suffix("")
-    exit_status = os.system(
-        f"trace-extract --tree-file {tszip1} --individuals 0,1,2 --chrom chr1 --include-regions {proper_chr1_regions} --out {outfix}"
-    )
-    assert exit_status == 0
-    assert Path(out_fp).is_file()
-    check_npz_file(out_fp)
+    if shutil.which("bedtools") is None:
+        exit_status = os.system(
+            f"trace-extract --tree-file {tszip1} --individuals 0,1,2 --chrom chr1 --include-regions {proper_chr1_regions} --out {outfix}"
+        )
+        assert exit_status != 0
+    else:
+        exit_status = os.system(
+            f"trace-extract --tree-file {tszip1} --individuals 0,1,2 --chrom chr1 --include-regions {proper_chr1_regions} --out {outfix}"
+        )
+        assert exit_status == 0
+        assert Path(out_fp).is_file()
+        check_npz_file(out_fp)
 
 
 @pytest.mark.parametrize("c", [None, "chr2", "chrX", "X"])
