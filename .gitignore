@@ -16,3 +16,6 @@ docs/_build/
 *.npz
 tracehmm/__pycache__/*
 test/.flake8
+*.txt
+example_data/*.npz
+example_data/*.txt

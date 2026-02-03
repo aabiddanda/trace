@@ -10,9 +10,90 @@ cd trace; pip install .
 ```
 
 ## Command-line Interface
+```
+> trace-extract --help
+Usage: trace-extract [OPTIONS]
 
-TBD
+  TRACE-Extract CLI.
 
+Options:
+  -f, --tree-file PATH       Input data in tskit or tsz format.  [required]
+  -t, --t-archaic FLOAT      Focal time for branch.  [default: 15000.0;
+                             required]
+  -i, --individuals TEXT     List of sampled haplotypes to run analysis for,
+                             comma separated (no spaces). Recognizes tree node
+                             IDs (int).  [required]
+  -w, --window-size INTEGER  Window size summarizing tree sequences (required
+                             if working with multiple posterior tree sequences
+                             like outputs from SINGER). If not provided, uses
+                             the marginal trees directly.
+  --chrom TEXT               chromosome ID for the tree sequence, must match
+                             the chromosome ID in the include regions file.
+  --include-regions PATH     A BED file containing the INCLUDE regions for the
+                             tree sequence.
+  -o, --out TEXT             Output file prefixes.  [default: trace; required]
+  --help                     Show this message and exit.
+
+> trace-infer --help  
+Usage: trace-infer [OPTIONS]
+
+  TRACE-Inference CLI.
+
+Options:
+  -i, --individual TEXT  the focal individual tree node id to run the HMM on,
+                         only take a sample name if --sample-names is
+                         specified.  [required]
+  --npz-files TEXT       Input data in npz format (output from trace-extract).
+                         If multiple chromosomes are provided, separate by
+                         comma (no spaces).
+  --data-files TEXT      a list of .npz files (outputs from trace-extract),
+                         one file per line. If multiple chromosomes are
+                         provided, provide one data file per chromosome,
+                         separated by comma (no spaces).
+  --chroms TEXT          chromosome ID for the tree sequence, must match the
+                         chromosome ID in the include regions file. If
+                         multiple chromosomes are provided, separate by comma
+                         (no spaces).  [default: chr1]
+  --func [mean|median]   Summarize function for windows across posterior tree
+                         sequences.  [default: mean]
+  --genetic-maps TEXT    a HapMap formatted genetic map (see https://ftp.ncbi.
+                         nlm.nih.gov/hapmap/recombination/2011-01_phaseII_B37/
+                         for hg19 HapMap genetic map),the 2nd and 4th column
+                         (1-index) should be position (bp) and genetic
+                         distance (cM); if multiple chromosomes are provided,
+                         separate by comma (no spaces). assume a uniform
+                         recombination rate of 1e-8 per bp per generation if
+                         not specified
+  --seed INTEGER         random seed   [default: 42]
+  -o, --out TEXT         Output file prefix, output files will be named as
+                         [out].[chrom].xss.npz  [default: trace; required]
+  --help                 Show this message and exit.
+
+> trace-summarize --help
+Usage: trace-summarize [OPTIONS]
+
+  TRACE-Summarize CLI.
+
+Options:
+  -f, --files TEXT                Posterior probability file from trace-infer,
+                                  end with .xss.npz. Multiple files (for the
+                                  same individual, different chromosomes) are
+                                  allowed, separated by comma  [required]
+  -c, --chroms TEXT               Chromosome ID used in the output file, must
+                                  be consistent with the input files
+                                  [required]
+  --posterior-threshold FLOAT     posterior probability threshold for calling
+                                  introgression  [default: 0.9]
+  --physical-length-threshold INTEGER
+                                  physical length threshold for calling
+                                  introgression, in bp  [default: 50000]
+  --genetic-distance-threshold FLOAT
+                                  genetic distance threshold for calling
+                                  introgression, in cM  [default: 0.05]
+  -o, --out TEXT                  prefix for output file, output file will be
+                                  named as [out].summary.txt  [required]
+  --help                          Show this message and exit.
+```
 ## Running an Example
 
 In order to facilitate a basic example, we have provided some simulated data to get a feel for using the CLI.
@@ -38,11 +119,11 @@ trace-summarize -f example_data/test_infer.chr1.xss.npz -c chr1 -o example_data/
 
 ## Example with Relate and SINGER inferred ARGs
 
-Here I want to show an example of applying TRACE to ARGs inferred from real data. I would assume we are studying Neanderthal introgression into modern humans, so would use `--t-archaic 15000` (the user-defined timescale parater t=15000) for our analysis. This parameter should be chosen based on the aim of the study.
+Here we want to show an example of applying TRACE to ARGs inferred from real data. We would assume we are studying Neanderthal introgression into modern humans, so would use `--t-archaic 15000` (the user-defined timescale parater t=15000) for our analysis. This parameter should be chosen based on the aim of the study.
 
 ### Handling Relate and SINGER outputs
 
-I would assume that we already have `Relate` or `SINGER` run on a dataset that we are interested in analyzing here. Since TRACE only accepts tree sequences (`.trees` or `.tsz`) as input, we need to convert raw outputs from these programs to `tskit` formats.
+I would assume that we already have Relate or SINGER run on a dataset that we are interested in analyzing here. Since TRACE only accepts tree sequences (`.trees` or `.tsz`) as input, we need to convert raw outputs from these programs to `tskit` formats.
 
 For Relate, please checkout https://github.com/leospeidel/relate_lib.
 
@@ -50,7 +131,7 @@ For SINGER, please checkout https://github.com/popgenmethods/SINGER for module `
 
 ### Extracting observation data from ARGs
 
-First we need to extract observation data for individuals that we are analyzing from ARGs. For this example, I would analyze haplotypes that has sample ID 0 to 3 (individual 0 to 1) in the input ARGs. Here are sample information for the 4 haplotypes
+First we need to extract observation data for individuals that we are analyzing from ARGs. For this example, we would analyze haplotypes that has sample ID 0 to 3 (individual 0 to 1) in the input ARGs. Here are sample information for the 4 haplotypes
 
 ```
 tree_node_id    haplotype_name
@@ -69,7 +150,7 @@ relate
 └── dataset1_chr3.tsz
 ```
 
-SINGER usually outputs multiple trees per chromosome depending on the input parameters we set. I would assume that we sampled 3 posterior tree sequences per chromosome when running `SINGER`. Then an example result directory would have a structure like this
+SINGER usually outputs multiple trees per chromosome depending on the input parameters we set. I would assume that we sampled 3 posterior tree sequences per chromosome when running SINGER. Then an example result directory would have a structure like this
 
 ```
 singer
@@ -101,7 +182,7 @@ We could ask TRACE to only use genotype information from regions with high confi
 > trace-extract --tree-file relate/dataset1_chr1.tsz --t-archaic 15000 --individuals 0,1,2,3 --include-regions strictmask_chr1.bed --chrom chr1 -o relate/dataset1_t15000_strictmask_group1_chr1
 ```
 
-For `SINGER` outputs, we need to specify `--window-size` parameter so that TRACE could summarize results across different posterior tree sequences.
+For SINGER outputs, we need to specify `--window-size` parameter so that TRACE could summarize results across different posterior tree sequences.
 
 ```
 # This would produce output file singer/chr1/dataset1_t15000_strictmask_group1_chr1_sample1.npz
@@ -218,13 +299,13 @@ We need to run this command separately for each individual. We could change the 
     - "individuals": (n, ) shape integer array specifiying the tree node ID of each sample record in "ncoal", "t1s", "t2s"
 
 2. Output from `trace-infer`: a numpy NpzFile with following numpy arrays
-    - Let l be the number of marginal trees (or genomic windows) for output chromosome i, m denote the number of posterior tree sequences (from SINGER) the user inputed (e.g. number of rows in each `--data-files`).
+    - Let l be the number of marginal trees (or genomic windows) for an input chromosome, m denote the number of posterior tree sequences (from SINGER) the user inputed (e.g. number of rows in each `--data-files`).
     - "ncoal": (l, ) shape array specifying final input observation data for TRACE (summarized across m posterior trees with `--func`)
     - "treespan": (l x 2) array storing the spans of marginal trees (or genomic windows) in genetic distance (cM), should be "treespan_phy"*1e-6 if `--genetic-maps` not specified
     - "treespan_phy": (l x 2) array storing the spans of marginal trees (or genomic windows) in physical distance (bp)
     - "accessible_windows": (l, ) shape 0-1 array specifiying if the marginal tree (or genomic window) is accessible in any one of the m posterior trees, 1-True, 0-False.
     - "params": (p x 9) array storing the inferred parameters at each EM updates (p rounds in total)
-    - "gammas": (2 x l) array storing the posterior probability for 0-Human and 1-Archaic states across l marginal trees (or genomic windows)
+    - "gammas": (2 x l) array storing the posterior probability for row0-Human and row1-Archaic states across l marginal trees (or genomic windows)
     - "seed": (1, ) array storing the random seed used for TRACE run
     - "individual": (1, ) array storing tree node ID for the focal individual
 
