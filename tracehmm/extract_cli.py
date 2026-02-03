@@ -156,7 +156,6 @@ def get_data(ts, ind, t_archaic, windowsize, mask=None, chrom=None):
     "-t",
     required=True,
     type=float,
-    default=15e3,
     help="Focal time for branch.",
 )
 @click.option(
