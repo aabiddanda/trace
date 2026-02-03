@@ -46,10 +46,10 @@ Options:
   --npz-files TEXT       Input data in npz format (output from trace-extract).
                          If multiple chromosomes are provided, separate by
                          comma (no spaces).
-  --data-files TEXT      a list of .npz files (outputs from trace-extract),
-                         one file per line. If multiple chromosomes are
-                         provided, provide one data file per chromosome,
-                         separated by comma (no spaces).
+  --data-files TEXT      a plain text file containing paths to .npz files (outputs
+                         from trace-extract), one .npz file per line. If
+                         multiple chromosomes are provided, provide one data
+                         file per chromosome, separated by comma (no spaces).
   --chroms TEXT          chromosome ID for the tree sequence, must match the
                          chromosome ID in the include regions file. If
                          multiple chromosomes are provided, separate by comma
