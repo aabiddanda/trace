@@ -26,7 +26,7 @@ def ts_infer_chr1(tmp_path_factory):
     out_fp2 = Path(fn).with_suffix(".chr1.xss.npz")
     outfix = Path(fn).with_suffix("")
     exit_status = os.system(
-        f"trace-extract --tree-file {fn} --individuals 0,1,2 --chrom chr1 --out {outfix}"
+        f"trace-extract --tree-file {fn} -t 15e3 --individuals 0,1,2 --chrom chr1 --out {outfix}"
     )
     assert exit_status == 0
     exit_status = os.system(
@@ -53,7 +53,7 @@ def ts_infer_chr2(tmp_path_factory):
     out_fp2 = Path(fn).with_suffix(".chr2.xss.npz")
     outfix = Path(fn).with_suffix("")
     exit_status = os.system(
-        f"trace-extract --tree-file {fn} --individuals 0,1,2 --chrom chr2 --out {outfix}"
+        f"trace-extract --tree-file {fn} -t 15e3 --individuals 0,1,2 --chrom chr2 --out {outfix}"
     )
     assert exit_status == 0
     exit_status = os.system(
