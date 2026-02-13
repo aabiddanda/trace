@@ -101,7 +101,7 @@ In order to facilitate a basic example, we have provided some simulated data to 
 1. To extract relevant observation data for the HMM, we use:
 
 ```
-trace-extract -f example_data/n10_seed10_A.tsz -t 15000 -i 0,1,2,3,4,5,6,7,8,9,10 -o example_data/test_extract
+trace-extract -f example_data/test_input.tsz -t 15000 -i 0,1,2,3,4,5,6,7,8,9,10 -o example_data/test_extract
 ```
 
 2. To infer a posterior decoding of introgression tracts, we use:
