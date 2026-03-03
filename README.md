@@ -1,4 +1,17 @@
-# TRACE: Estimating Introgression using ancestral recombination graphs
+# TRACE: TRacking Archaic Contributions via ARG Estimation
+
+Manuscript:
+
+
+
+Analysis pipelines applied in the manuscript:
+
+
+
+Processed data:
+
+
+
 
 ## Installation
 
