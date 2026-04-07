@@ -25,7 +25,7 @@ Usage: trace-extract [OPTIONS]
 
 Options:
   -f, --tree-file PATH       Input data in tskit or tsz format.  [required]
-  -t, --t-archaic FLOAT      Focal time for branch.  [required]
+  -t, --t FLOAT      Focal time for branch.  [required]
   -i, --individuals TEXT     List of sampled haplotypes to run analysis for,
                              comma separated (no spaces). Recognizes tree node
                              IDs (int).  [required]
