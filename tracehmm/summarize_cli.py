@@ -3,8 +3,8 @@ import logging
 import sys
 from pathlib import Path
 
-import rich_click as click
 import numpy as np
+import rich_click as click
 
 from tracehmm import OutputUtils
 

@@ -19,86 +19,54 @@ pip install git+https://github.com/YulinZhang9806/trace.git
 ## Command-line Interface
 ```
 > trace-extract --help
-Usage: trace-extract [OPTIONS]
 
-  TRACE-Extract CLI.
+ Usage: trace-extract [OPTIONS]
 
-Options:
-  -f, --tree-file PATH       Input data in tskit or tsz format.  [required]
-  -t, --t-archaic FLOAT      Focal time for branch.  [required]
-  -i, --individuals TEXT     List of sampled haplotypes to run analysis for,
-                             comma separated (no spaces). Recognizes tree node
-                             IDs (int).  [required]
-  -w, --window-size INTEGER  Window size summarizing tree sequences (required
-                             if working with multiple posterior tree sequences
-                             like outputs from SINGER). If not provided, uses
-                             the marginal trees directly.
-  --chrom TEXT               chromosome ID for the tree sequence, must match
-                             the chromosome ID in the include regions file.
-  --include-regions PATH     A BED file containing the INCLUDE regions for the
-                             tree sequence.
-  -o, --out TEXT             Output file prefixes.  [default: trace; required]
-  --help                     Show this message and exit.
+ TRACE-Extract CLI.
+
+Options
+*  --tree-file        -f  PATH     Input data in tskit or tsz format. [required]
+*  --t                -t  FLOAT    Focal time for branch. [required]
+*  --individuals      -i  TEXT     List of sampled haplotypes to run analysis for, comma separated (no spaces). Recognizes tree node IDs (int). [required]
+--window-size      -w  INTEGER  Window size summarizing tree sequences (required if working with multiple posterior tree sequences like outputs from SINGER). If not provided, uses the marginal trees directly.
+--chrom                TEXT     chromosome ID for the tree sequence, must match the chromosome ID in the include regions file.
+--include-regions      PATH     A BED file containing the INCLUDE regions for the tree sequence.
+*  --out              -o  TEXT     Output file prefixes. [default: trace] [required]
+--help                          Show this message and exit.
+
 
 > trace-infer --help
+
 Usage: trace-infer [OPTIONS]
 
-  TRACE-Inference CLI.
+TRACE-Inference CLI.
 
-Options:
-  -i, --individual TEXT  the focal individual tree node id to run the HMM on,
-                         only take a sample name if --sample-names is
-                         specified.  [required]
-  --npz-files TEXT       Input data in npz format (output from trace-extract).
-                         If multiple chromosomes are provided, separate by
-                         comma (no spaces).
-  --data-files TEXT      a plain text file containing paths to .npz files (outputs
-                         from trace-extract), one .npz file per line. If
-                         multiple chromosomes are provided, provide one data
-                         file per chromosome, separated by comma (no spaces).
-  --chroms TEXT          chromosome ID for the tree sequence, must match the
-                         chromosome ID in the include regions file. If
-                         multiple chromosomes are provided, separate by comma
-                         (no spaces).  [default: chr1]
-  --func [mean|median]   Summarize function for windows across posterior tree
-                         sequences.  [default: mean]
-  --genetic-maps TEXT    a HapMap formatted genetic map (see https://ftp.ncbi.
-                         nlm.nih.gov/hapmap/recombination/2011-01_phaseII_B37/
-                         for hg19 HapMap genetic map),the 2nd and 4th column
-                         (1-index) should be position (bp) and genetic
-                         distance (cM); if multiple chromosomes are provided,
-                         separate by comma (no spaces). assume a uniform
-                         recombination rate of 1e-8 per bp per generation if
-                         not specified
-  --seed INTEGER         random seed   [default: 42]
-  -o, --out TEXT         Output file prefix, output files will be named as
-                         [out].[chrom].xss.npz  [default: trace; required]
-  --help                 Show this message and exit.
+*  --individual    -i  TEXT           the focal individual tree node id to run the HMM on, only take a sample name if --sample-names is specified. [required]
+--npz-files         TEXT           Input data in npz format (output from trace-extract). If multiple chromosomes are provided, separate by comma (no spaces).
+--data-files        TEXT           a plain text file containing paths to .npz files (outputs from trace-extract), one .npz file per line. If multiple chromosomes are provided, provide one data file per chromosome, separated by comma (no spaces).
+--chroms            TEXT           chromosome ID for the tree sequence, must match the chromosome ID in the include regions file. If multiple chromosomes are provided, separate by comma (no spaces). [default: chr1]
+--func              [mean|median]  Summarize function for windows across posterior tree sequences. [default: mean]
+--genetic-maps      TEXT           a HapMap formatted genetic map (see https://ftp.ncbi.nlm.nih.gov/hapmap/recombination/2011-01_phaseII_B37/ for hg19 HapMap genetic map),the 2nd and 4th column (1-index) should be position (bp) and genetic distance (cM); if multiple chromosomes are provided, separate by comma (no spaces). assume a uniform recombination rate of 1e-8 per bp per generation if not specified
+--seed              INTEGER        random seed [default: 42]
+*  --out           -o  TEXT           Output file prefix, output files will be named as [out].[chrom].xss.npz [default: trace] [required]
+--help                             Show this message and exit.
+
 
 > trace-summarize --help
+
 Usage: trace-summarize [OPTIONS]
 
-  TRACE-Summarize CLI.
+TRACE-Summarize CLI.
 
-Options:
-  -f, --files TEXT                Posterior probability file from trace-infer,
-                                  end with .xss.npz. Multiple files (for the
-                                  same individual, different chromosomes) are
-                                  allowed, separated by comma  [required]
-  -c, --chroms TEXT               Chromosome ID used in the output file, must
-                                  be consistent with the input files
-                                  [required]
-  --posterior-threshold FLOAT     posterior probability threshold for calling
-                                  introgression  [default: 0.9]
-  --physical-length-threshold INTEGER
-                                  physical length threshold for calling
-                                  introgression, in bp  [default: 50000]
-  --genetic-distance-threshold FLOAT
-                                  genetic distance threshold for calling
-                                  introgression, in cM  [default: 0.05]
-  -o, --out TEXT                  prefix for output file, output file will be
-                                  named as [out].summary.txt  [required]
-  --help                          Show this message and exit.
+Options
+*  --files                       -f  TEXT     Posterior probability file from trace-infer, end with .xss.npz. Multiple files (for the same individual, different chromosomes) are allowed, separated by comma [required]
+*  --chroms                      -c  TEXT     Chromosome ID used in the output file, must be consistent with the input files [required]
+--posterior-threshold             FLOAT    posterior probability threshold for calling introgression [default: 0.9]
+--physical-length-threshold       INTEGER  physical length threshold for calling introgression, in bp [default: 50000]
+--genetic-distance-threshold      FLOAT    genetic distance threshold for calling introgression, in cM [default: 0.05]
+*  --out                         -o  TEXT     prefix for output file, output file will be named as [out].summary.txt [required]
+--help                                     Show this message and exit.
+
 ```
 ## Running an Example
 

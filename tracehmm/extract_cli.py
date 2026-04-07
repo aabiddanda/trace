@@ -4,9 +4,9 @@ import shutil
 import sys
 from pathlib import Path
 
-import rich_click as click
 import numpy as np
 import pandas as pd
+import rich_click as click
 import tskit
 import tszip
 from tqdm import tqdm
@@ -152,7 +152,7 @@ def get_data(ts, ind, t_archaic, windowsize, mask=None, chrom=None):
     help="Input data in tskit or tsz format.",
 )
 @click.option(
-    "--t-archaic",
+    "--t",
     "-t",
     required=True,
     type=float,
@@ -198,7 +198,7 @@ def get_data(ts, ind, t_archaic, windowsize, mask=None, chrom=None):
 )
 def main(
     tree_file=None,
-    t_archaic=15e3,
+    t=15e3,
     individuals=None,
     window_size=None,
     chrom=None,
@@ -249,7 +249,7 @@ def main(
         f"Extracting TRACE-information from {tree_file} across {len(indiv)} individuals ..."
     )
     ncoal, t1s, t2s, nleaves, treespan, accessible_windows, mask = get_data(
-        ts, indiv, t_archaic, window_size, include_regions, chrom
+        ts, indiv, t, window_size, include_regions, chrom
     )
     if window_size is not None:
         m = int(ts.sequence_length / window_size) + int(
