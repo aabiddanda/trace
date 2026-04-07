@@ -1,25 +1,19 @@
 # TRACE: TRacking Archaic Contributions via ARG Estimation
 
-Manuscript:
+Manuscript: [![bioRxiv](https://img.shields.io/badge/bioRxiv-preprint-B31B1B)](https://doi.org/10.64898/2026.03.03.709416)
 
-https://www.biorxiv.org/content/10.64898/2026.03.03.709416v1
+Analysis pipelines applied in the manuscript: **(under development)**
 
-Analysis pipelines applied in the manuscript:
-
-(under development)
-
-Processed data:
-
-(under development)
+Processed data: **(under development)**
 
 
 ## Installation
 
-In order to install the package locally you can run:
+In order to install the package locally within an environment you can run:
 
 ```
-git clone https://github.com/YulinZhang9806/trace.git
-cd trace; pip install .
+# NOTE: we suggest making a new environment for this installation using `uv` or `pyenv`
+pip install git+https://github.com/YulinZhang9806/trace.git
 ```
 
 ## Command-line Interface

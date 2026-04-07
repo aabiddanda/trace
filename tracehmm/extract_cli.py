@@ -4,7 +4,7 @@ import shutil
 import sys
 from pathlib import Path
 
-import click
+import rich_click as click
 import numpy as np
 import pandas as pd
 import tskit
