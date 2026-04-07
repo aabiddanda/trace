@@ -7,7 +7,7 @@ requires = [
     "numpy",
     "pandas",
     "tqdm",
-    "Click",
+    "rich_click",
     "tskit",
     "tszip",
     "pybedtools",
@@ -21,12 +21,12 @@ description = "A method to infer introgression without archaic references."
 keywords = ["admixture", "introgression"]
 classifiers = ["Development Status :: 3 - Alpha", "Intended Audience :: Science/Research", "Programming Language :: Python :: 3"]
 requires-python = ">= 3.9"
-dependencies = ["numpy", "scipy", "pandas", "Cython", "Click", "tqdm", "tskit", "tszip", "intervaltree", "pybedtools"]
+dependencies = ["numpy", "scipy", "pandas", "Cython", "rich_click", "tqdm", "tskit", "tszip", "intervaltree", "pybedtools"]
 dynamic = ["version"]
 authors = [{name="Yulin Zhang", email="zhangyulin9806@berkeley.edu"}, {name = "Arjun Biddanda", email = "abiddan1@jhu.edu"}]
 
 [project.urls]
-Homepage = "https://github.com/aabiddanda/trace"
+Homepage = "https://github.com/YulinZhang9806/trace"
 
 [project.optional-dependencies]
 tests = ["msprime", "pytest", "pytest-cov", "hypothesis", "pytest-xdist"]

@@ -4,7 +4,7 @@ import shutil
 import sys
 from pathlib import Path
 
-import click
+import rich_click as click
 import numpy as np
 import pandas as pd
 import tskit
@@ -156,7 +156,6 @@ def get_data(ts, ind, t_archaic, windowsize, mask=None, chrom=None):
     "-t",
     required=True,
     type=float,
-    default=15e3,
     help="Focal time for branch.",
 )
 @click.option(

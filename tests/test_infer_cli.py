@@ -24,7 +24,7 @@ def ts_extract1(tmp_path_factory):
     out_fp = Path(fn).with_suffix(".npz")
     outfix = Path(fn).with_suffix("")
     exit_status = os.system(
-        f"trace-extract --tree-file {fn} --individuals 0,1,2 --out {outfix}"
+        f"trace-extract --tree-file {fn} -t 15e3 --individuals 0,1,2 --out {outfix}"
     )
     assert exit_status == 0
     assert Path(out_fp).is_file()
@@ -48,7 +48,7 @@ def ts_extract2(tmp_path_factory):
     out_fp = Path(fn).with_suffix(".npz")
     outfix = Path(fn).with_suffix("")
     exit_status = os.system(
-        f"trace-extract --tree-file {fn} --individuals 0,1,2 --out {outfix}"
+        f"trace-extract --tree-file {fn} -t 15e3 --individuals 0,1,2 --out {outfix}"
     )
     assert exit_status == 0
     assert Path(out_fp).is_file()

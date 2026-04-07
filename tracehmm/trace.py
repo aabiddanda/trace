@@ -168,7 +168,7 @@ class TRACE:
         pos_col: column number for physical positions (0-index).
         m_col: column number for genetic distances (in Centi-Morgan (cM), 0-index).
         """
-        df = pd.read_csv(recmap, sep="\s+", header=None, skiprows=int(skiprow))
+        df = pd.read_csv(recmap, sep=r"\s+", header=None, skiprows=int(skiprow))
         recmap = df.iloc[:, [pos_col, m_col]].to_numpy().astype("float")
         if not recmap[0, 0] == 0.0:
             recmap = np.insert(recmap, 0, [0.0, 0.0], axis=0)
