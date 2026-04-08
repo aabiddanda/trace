@@ -24,16 +24,22 @@ pip install git+https://github.com/YulinZhang9806/trace.git
 
  TRACE-Extract CLI.
 
-Options
-*  --tree-file        -f  PATH     Input data in tskit or tsz format. [required]
-*  --t                -t  FLOAT    Focal time for branch. [required]
-*  --individuals      -i  TEXT     List of sampled haplotypes to run analysis for, comma separated (no spaces). Recognizes tree node IDs (int). [required]
---window-size      -w  INTEGER  Window size summarizing tree sequences (required if working with multiple posterior tree sequences like outputs from SINGER). If not provided, uses the marginal trees directly.
---chrom                TEXT     chromosome ID for the tree sequence, must match the chromosome ID in the include regions file.
---include-regions      PATH     A BED file containing the INCLUDE regions for the tree sequence.
-*  --out              -o  TEXT     Output file prefixes. [default: trace] [required]
---help                          Show this message and exit.
-
+Options:
+  -f, --tree-file PATH       Input data in tskit or tsz format.  [required]
+  -t, --t FLOAT      Focal time for branch.  [required]
+  -i, --individuals TEXT     List of sampled haplotypes to run analysis for,
+                             comma separated (no spaces). Recognizes tree node
+                             IDs (int).  [required]
+  -w, --window-size INTEGER  Window size summarizing tree sequences (required
+                             if working with multiple posterior tree sequences
+                             like outputs from SINGER). If not provided, uses
+                             the marginal trees directly.
+  --chrom TEXT               chromosome ID for the tree sequence, must match
+                             the chromosome ID in the include regions file.
+  --include-regions PATH     A BED file containing the INCLUDE regions for the
+                             tree sequence.
+  -o, --out TEXT             Output file prefixes.  [default: trace; required]
+  --help                     Show this message and exit.
 
 > trace-infer --help
 
@@ -41,6 +47,7 @@ Usage: trace-infer [OPTIONS]
 
 TRACE-Inference CLI.
 
+Options:
 *  --individual    -i  TEXT           the focal individual tree node id to run the HMM on, only take a sample name if --sample-names is specified. [required]
 --npz-files         TEXT           Input data in npz format (output from trace-extract). If multiple chromosomes are provided, separate by comma (no spaces).
 --data-files        TEXT           a plain text file containing paths to .npz files (outputs from trace-extract), one .npz file per line. If multiple chromosomes are provided, provide one data file per chromosome, separated by comma (no spaces).
@@ -58,7 +65,7 @@ Usage: trace-summarize [OPTIONS]
 
 TRACE-Summarize CLI.
 
-Options
+Options:
 *  --files                       -f  TEXT     Posterior probability file from trace-infer, end with .xss.npz. Multiple files (for the same individual, different chromosomes) are allowed, separated by comma [required]
 *  --chroms                      -c  TEXT     Chromosome ID used in the output file, must be consistent with the input files [required]
 --posterior-threshold             FLOAT    posterior probability threshold for calling introgression [default: 0.9]
@@ -93,7 +100,7 @@ trace-summarize -f example_data/test_infer.chr1.xss.npz -c chr1 -o example_data/
 
 ## Example with Relate and SINGER inferred ARGs
 
-Here we want to show an example of applying TRACE to ARGs inferred from real data. We would assume we are studying Neanderthal introgression into modern humans, so would use `--t-archaic 15000` (the user-defined timescale parater t=15000) for our analysis. This parameter should be chosen based on the aim of the study.
+Here we want to show an example of applying TRACE to ARGs inferred from real data. We would assume we are studying Neanderthal introgression into modern humans, so would use `-t 15000` (the user-defined timescale parater t=15000) for our analysis. This parameter should be chosen based on the aim of the study.
 
 ### Handling Relate and SINGER outputs
 
@@ -146,21 +153,21 @@ We need to extract observation data for haplotype 0-3 (sample node ID 0-3, indiv
 
 ```
 # This would produce output file relate/dataset1_t15000_group1_chr1.npz
-> trace-extract --tree-file relate/dataset1_chr1.tsz --t-archaic 15000 --individuals 0,1,2,3 -o relate/dataset1_t15000_group1_chr1
+> trace-extract --tree-file relate/dataset1_chr1.tsz -t 15000 --individuals 0,1,2,3 -o relate/dataset1_t15000_group1_chr1
 ```
 
 We could ask TRACE to only use genotype information from regions with high confidence (for example, strict / pilot masks from 1000 Genomes) by specifying `--include-regions` and `--chrom`. This would limit the following analysis on trees that overlap >99% with the input BED file in the tree sequence.
 
 ```
 # This would produce output file relate/dataset1_t15000_strictmask_group1_chr1.npz
-> trace-extract --tree-file relate/dataset1_chr1.tsz --t-archaic 15000 --individuals 0,1,2,3 --include-regions strictmask_chr1.bed --chrom chr1 -o relate/dataset1_t15000_strictmask_group1_chr1
+> trace-extract --tree-file relate/dataset1_chr1.tsz -t 15000 --individuals 0,1,2,3 --include-regions strictmask_chr1.bed --chrom chr1 -o relate/dataset1_t15000_strictmask_group1_chr1
 ```
 
 For SINGER outputs, we need to specify `--window-size` parameter so that TRACE could summarize results across different posterior tree sequences.
 
 ```
 # This would produce output file singer/chr1/dataset1_t15000_strictmask_group1_chr1_sample1.npz
-> trace-extract --tree-file singer/chr1/dataset1_chr1_sample1.tsz --t-archaic 15000 --individuals 0,1,2,3 --include-regions strictmask_chr1.bed --chrom chr1 --window-size 1000 -o singer/chr1/dataset1_t15000_strictmask_group1_chr1_sample1
+> trace-extract --tree-file singer/chr1/dataset1_chr1_sample1.tsz -t 15000 --individuals 0,1,2,3 --include-regions strictmask_chr1.bed --chrom chr1 --window-size 1000 -o singer/chr1/dataset1_t15000_strictmask_group1_chr1_sample1
 ```
 
 We need to run this command separately for each tree sequence file. We recommand extracting multiple samples in one command, which would make the most efficient usage of computation time, memory and storage space. However, this step does take some amount of time when the input chromosome is large. In this case, splitting individuals into groups and running different groups in parallel would be the best choice.
